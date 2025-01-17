@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_pkl/src/features/asn_page/UI/asn_data_screen.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
 
 class TabBarNavigation extends StatelessWidget {
@@ -29,9 +30,7 @@ class TabBarNavigation extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            Container(
-              color: ColorManager.blue,
-            ),
+            AsnDataScreen(),
             Container(
               color: ColorManager.yellow,
             ),

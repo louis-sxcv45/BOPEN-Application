@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project_pkl/src/tab_bar.dart';
+import 'package:project_pkl/src/features/login/UI/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: TabBarNavigation(),
+      home: LoginScreen(),
     );
   }
 }
