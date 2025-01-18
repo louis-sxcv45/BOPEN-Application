@@ -36,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Text(
                 'DPMPTSP BOPEN',
+                textAlign: TextAlign.start,
                 style: TextStyle(
                   fontSize: AppSize.s32,
                   fontWeight: FontWeightManager.bold,
