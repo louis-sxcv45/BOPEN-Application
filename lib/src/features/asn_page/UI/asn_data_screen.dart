@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AsnDataScreen extends StatefulWidget {
@@ -7,9 +8,25 @@ class AsnDataScreen extends StatefulWidget {
   State<AsnDataScreen> createState() => _AsnDataScreenState();
 }
 
+void readDataASN() async {
+  CollectionReference penilaianASN = FirebaseFirestore.instance.collection("penilaian_asn");
+
+  QuerySnapshot querySnapshot = await penilaianASN.get();
+  querySnapshot.docs.forEach((element) {
+    print(element.data());
+  });
+}
+
 class _AsnDataScreenState extends State<AsnDataScreen> {
   bool sortAscending = false;
   int sortColumnIndex = 4;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    readDataASN();
+    super.initState();
+  }
 
   void sort(int columnIndex, bool ascending){
     setState((){

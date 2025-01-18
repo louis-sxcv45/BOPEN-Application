@@ -1,4 +1,4 @@
-package com.example.project_pkl
+package com.dpmptsp.penilaianpegawai
 
 import io.flutter.embedding.android.FlutterActivity
 

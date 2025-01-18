@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google() // Untuk Google Maven Repository
+        mavenCentral() // Untuk Maven Central Repository
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.2' // Pastikan versi AGP sesuai
+        classpath 'com.google.gms:google-services:4.4.0' // Plugin Google Services
+    }
+}
+
 allprojects {
     repositories {
         google()
