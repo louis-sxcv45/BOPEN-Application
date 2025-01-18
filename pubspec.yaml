@@ -38,7 +38,8 @@ dependencies:
   google_fonts: ^6.2.1
   dropdown_textfield: ^1.2.0
   cloud_firestore: ^5.6.1
-
+  firebase_core: ^3.10.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -49,6 +50,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  change_app_package_name: ^1.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

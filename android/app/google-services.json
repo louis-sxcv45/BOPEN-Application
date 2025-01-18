@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "301481817685",
+    "project_id": "penilaian-pegawai-b1db3",
+    "storage_bucket": "penilaian-pegawai-b1db3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301481817685:android:35504b0ce95925743a46dc",
+        "android_client_info": {
+          "package_name": "com.dpmptsp.penilaianpegawai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDriEMtvSNM6uzeA1wKJzMhl5IAFopa3CM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
