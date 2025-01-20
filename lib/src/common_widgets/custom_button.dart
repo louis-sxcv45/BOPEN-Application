@@ -3,18 +3,21 @@ import 'package:project_pkl/src/style_manager/color_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
 class CustomButton extends StatelessWidget {
-  const CustomButton({super.key, required this.title, required this.onTap});
+  const CustomButton({super.key, required this.title, required this.onTap, required this.width, required this.height});
 
   final String title;
   final VoidCallback onTap;
+  final double width;
+  final double height;
+  
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 137,
+        width: width,
         alignment: Alignment.center,
-        height: 35,
+        height: height,
         decoration: BoxDecoration(
           color: ColorManager.yellow,
           borderRadius: BorderRadius.circular(AppSize.s8)

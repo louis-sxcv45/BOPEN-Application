@@ -1,27 +1,26 @@
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
-import 'package:project_pkl/src/features/voting_page/fill_%20bobot_page/fill_bobot_page.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
-class VotingDataASN extends StatefulWidget {
-  const VotingDataASN({super.key});
+class VotingNonAsn extends StatefulWidget {
+  const VotingNonAsn({super.key});
+
   @override
-  State<VotingDataASN> createState() => _VotingDataASNState();
+  State<VotingNonAsn> createState() => _VotingNonAsnState();
 }
 
-class _VotingDataASNState extends State<VotingDataASN> {
+class _VotingNonAsnState extends State<VotingNonAsn> {
   final SingleValueDropDownController namaKaryawanController =
       SingleValueDropDownController();
   final TextEditingController bobotController = TextEditingController();
 
-  String nip = '';
   String nama = '';
   String jabatan = '';
-  int bobotDetails = 0;
+  int bobot = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
@@ -36,7 +35,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
   Future<void> _loadPegawaiData() async {
     try {
       final querySnapshot =
-          await FirebaseFirestore.instance.collection('asn').get();
+          await FirebaseFirestore.instance.collection('non_asn').get();
       if (mounted) {
         setState(() {
           pegawaiList = querySnapshot.docs.map((doc) {
@@ -44,7 +43,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
             return DropDownValueModel(
               name: data['nama'] ?? 'Unknown Name',
               value: {
-                'nip': data['nip'] ?? 'Unknown NIP',
                 'nama': data['nama'] ?? 'Unknown Name',
                 'jabatan': data['jabatan'] ?? 'Unknown Jabatan',
               },
@@ -66,20 +64,8 @@ class _VotingDataASNState extends State<VotingDataASN> {
     }
   }
 
-  void _navigateToFillBobotPage() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const FillBobotPage()),
-    );
-
-    if (result != null && mounted) {
-      setState(() {
-        bobotDetails = result; // Menampilkan total bobot
-      });
-    }
-  }
   Future<void> saveVotingData() async {
-    if (nama.isEmpty || bobotDetails == 0) {
+    if (nama.isEmpty || bobot == 0) {
       _showErrorMessage('Please fill in all required fields');
       return;
     }
@@ -87,11 +73,10 @@ class _VotingDataASNState extends State<VotingDataASN> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('penilaian_asn').add({
+      await FirebaseFirestore.instance.collection('penilaian_non_asn').add({
         'nama': nama,
         'jabatan': jabatan,
-        'nip': nip,
-        'bobot': bobotDetails, // Now saving as integer
+        'bobot': bobot, // Now saving as integer
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -109,6 +94,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
       }
     }
   }
+
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -126,11 +112,12 @@ class _VotingDataASNState extends State<VotingDataASN> {
       ),
     );
   }
-    void _resetForm() {
+
+  void _resetForm() {
     setState(() {
       nama = '';
       jabatan = '';
-      bobotDetails = 0;
+      bobot = 0;
       bobotController.clear();
       namaKaryawanController.clearDropDown();
     });
@@ -139,6 +126,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
   @override
   void dispose() {
     namaKaryawanController.dispose();
+    bobotController.dispose();
     super.dispose();
   }
 
@@ -157,7 +145,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           DropDownTextField(
                             controller: namaKaryawanController,
@@ -166,7 +154,8 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             textFieldDecoration: InputDecoration(
                               labelText: 'Pilih Karyawan',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(AppSize.s12),
+                                borderRadius:
+                                    BorderRadius.circular(AppSize.s12),
                               ),
                             ),
                             dropDownList: pegawaiList,
@@ -177,7 +166,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 final selectedValue =
                                     value.value as Map<String, dynamic>;
                                 setState(() {
-                                  nip = selectedValue['nip'] ?? '';
                                   nama = selectedValue['nama'] ?? '';
                                   jabatan = selectedValue['jabatan'] ?? '';
                                 });
@@ -186,7 +174,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
                           ),
                           const SizedBox(height: 16),
                           Container(
-                            width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey),
@@ -204,14 +191,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'NIP: $nip',
-                                  style: TextStyle(
-                                    fontSize: FontSizeManager.f12,
-                                    fontFamily: FontFamilyManager.latoFont,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
                                   'Jabatan: $jabatan',
                                   style: TextStyle(
                                     fontSize: FontSizeManager.f12,
@@ -222,32 +201,32 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          if (bobotDetails > 0)
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(AppSize.s12),
-                              ),
-                              child: Text(
-                                'Total Bobot: $bobotDetails',
-                                style: const TextStyle(fontSize: 16),
+                          TextField(
+                            controller: bobotController,
+                            decoration: InputDecoration(
+                              labelText: 'Bobot',
+                              hintText: 'Masukkan Bobot',
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppSize.s12),
                               ),
                             ),
-                          const SizedBox(height: 24),
-                          CustomButton(
-                            title: 'Isi Nilai Bobot',
-                            onTap: _navigateToFillBobotPage,
-                            width: 137,
-                            height: 35,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                bobot = value.isEmpty ? 0 : int.parse(value);
+                              });
+                            },
                           ),
                           const SizedBox(height: 24),
                           isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : CustomButton(
-                                width: 400,
-                                height: 45,
+                                width: 137,
+                                height: 35,
                                   title: 'Simpan Data',
                                   onTap: saveVotingData,
                                 ),
