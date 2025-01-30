@@ -3,8 +3,8 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
-import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
+import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 
 class VotingNonAsn extends StatefulWidget {
   const VotingNonAsn({super.key});
@@ -22,7 +22,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
 
   String nama = '';
   String jabatan = '';
-  int totalBobot = 0;
+  int bobotDetails = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
@@ -47,7 +47,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       int inovatif = int.tryParse(inovatifFieldController.text) ?? 0;
       int penampilan = int.tryParse(penampilanFieldController.text) ?? 0;
 
-      totalBobot = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
+      bobotDetails = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
     });
   }
 
@@ -84,8 +84,8 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   }
 
   Future<void> saveVotingData() async {
-    if (nama.isEmpty || totalBobot == 0) {
-      _showErrorMessage('Harap isi semua data yang diperlukan');
+    if (nama.isEmpty || bobotDetails == 0) {
+      _showErrorMessage('Please fill in all required fields');
       return;
     }
 
@@ -102,7 +102,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
           'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
           'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
           'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
-          'bobot': totalBobot,
+          'bobot': bobotDetails,
           'timestamp': FieldValue.serverTimestamp(),
         });
       } else {
@@ -114,7 +114,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
           'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
           'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
           'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
-          'bobot': totalBobot,
+          'bobot': bobotDetails,
           'timestamp': FieldValue.serverTimestamp(),
         });
       }
@@ -156,11 +156,11 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
     setState(() {
       nama = '';
       jabatan = '';
-      totalBobot = 0;
       disiplinFieldController.clear();
       orientasiFieldController.clear();
       inovatifFieldController.clear();
       penampilanFieldController.clear();
+      bobotDetails = 0;
       namaKaryawanController.clearDropDown();
     });
   }
@@ -275,7 +275,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                               borderRadius: BorderRadius.circular(AppSize.s12),
                             ),
                             child: Text(
-                              'Total Bobot: $totalBobot',
+                              'Total Bobot: $bobotDetails',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

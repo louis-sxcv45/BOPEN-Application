@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
+import 'package:project_pkl/src/style_manager/values_manager.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
-import 'package:project_pkl/src/style_manager/values_manager.dart';
 
 class VotingDataASN extends StatefulWidget {
   const VotingDataASN({super.key});

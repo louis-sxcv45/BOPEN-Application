@@ -58,18 +58,15 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
             scrollDirection: Axis.horizontal,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return DataTable(
-                  columnSpacing: 20,
-                  sortColumnIndex: sortColumnIndex,
-                  sortAscending: sortAscending,
-                  columns: [
-                    const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                    const DataColumn(
-                      label: Expanded(
-                        child: Text('Nama Karyawan')
-                      ),
+                return SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: DataTable(
+                    columnSpacing: 20,
+                    sortColumnIndex: sortColumnIndex,
+                    sortAscending: sortAscending,
+                    columns: [
+                      const DataColumn(
+                        label: Expanded(child: Text('No')),
                     ),
                     const DataColumn(
                       label: Expanded(child: Text('NIP')),
@@ -105,27 +102,21 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                             ),
                           ),
                         ),
-                        DataCell(
-                          Text(
-                            employee['nip'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 200,
-                            child: Text(
-                              employee['jabatan'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          DataCell(
+                            SizedBox(
+                              width: 200,
+                              child: Text(
+                                employee['jabatan'] ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(Text('${employee['bobot'] ?? 0}')),
-                      ],
-                    );
-                  }).toList(),
+                          DataCell(Text('${employee['bobot'] ?? 0}')),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 );
               },
             ),
