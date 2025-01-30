@@ -1,14 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
+import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
 class VotingNonAsn extends StatefulWidget {
   const VotingNonAsn({super.key});
-
   @override
   State<VotingNonAsn> createState() => _VotingNonAsnState();
 }
@@ -16,11 +15,14 @@ class VotingNonAsn extends StatefulWidget {
 class _VotingNonAsnState extends State<VotingNonAsn> {
   final SingleValueDropDownController namaKaryawanController =
       SingleValueDropDownController();
-  final TextEditingController bobotController = TextEditingController();
+  final TextEditingController disiplinFieldController = TextEditingController();
+  final TextEditingController orientasiFieldController = TextEditingController();
+  final TextEditingController inovatifFieldController = TextEditingController();
+  final TextEditingController penampilanFieldController = TextEditingController();
 
   String nama = '';
   String jabatan = '';
-  int bobot = 0;
+  int totalBobot = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
@@ -30,6 +32,23 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   void initState() {
     super.initState();
     _loadPegawaiData();
+    
+    // Add listeners for bobot calculation
+    disiplinFieldController.addListener(_hitungTotalBobot);
+    orientasiFieldController.addListener(_hitungTotalBobot);
+    inovatifFieldController.addListener(_hitungTotalBobot);
+    penampilanFieldController.addListener(_hitungTotalBobot);
+  }
+
+  void _hitungTotalBobot() {
+    setState(() {
+      int disiplin = int.tryParse(disiplinFieldController.text) ?? 0;
+      int orientasi = int.tryParse(orientasiFieldController.text) ?? 0;
+      int inovatif = int.tryParse(inovatifFieldController.text) ?? 0;
+      int penampilan = int.tryParse(penampilanFieldController.text) ?? 0;
+
+      totalBobot = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
+    });
   }
 
   Future<void> _loadPegawaiData() async {
@@ -65,28 +84,48 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   }
 
   Future<void> saveVotingData() async {
-    if (nama.isEmpty || bobot == 0) {
-      _showErrorMessage('Please fill in all required fields');
+    if (nama.isEmpty || totalBobot == 0) {
+      _showErrorMessage('Harap isi semua data yang diperlukan');
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('penilaian_non_asn').add({
-        'nama': nama,
-        'jabatan': jabatan,
-        'bobot': bobot, // Now saving as integer
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      final collectionRef = FirebaseFirestore.instance.collection('penilaian_non_asn');
+      final existingDocs = await collectionRef.where('nama', isEqualTo: nama).get();
+
+      if (existingDocs.docs.isNotEmpty) {
+        // Update existing document
+        await collectionRef.doc(existingDocs.docs.first.id).update({
+          'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
+          'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
+          'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
+          'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+          'bobot': totalBobot,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // Create new document
+        await collectionRef.add({
+          'nama': nama,
+          'jabatan': jabatan,
+          'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
+          'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
+          'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
+          'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+          'bobot': totalBobot,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (mounted) {
-        _showSuccessMessage('Data saved successfully!');
+        _showSuccessMessage('Data berhasil disimpan!');
         _resetForm();
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Error saving data: $e');
+        _showErrorMessage('Error menyimpan data: $e');
       }
     } finally {
       if (mounted) {
@@ -117,8 +156,11 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
     setState(() {
       nama = '';
       jabatan = '';
-      bobot = 0;
-      bobotController.clear();
+      totalBobot = 0;
+      disiplinFieldController.clear();
+      orientasiFieldController.clear();
+      inovatifFieldController.clear();
+      penampilanFieldController.clear();
       namaKaryawanController.clearDropDown();
     });
   }
@@ -126,7 +168,10 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   @override
   void dispose() {
     namaKaryawanController.dispose();
-    bobotController.dispose();
+    disiplinFieldController.dispose();
+    orientasiFieldController.dispose();
+    inovatifFieldController.dispose();
+    penampilanFieldController.dispose();
     super.dispose();
   }
 
@@ -145,7 +190,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           DropDownTextField(
                             controller: namaKaryawanController,
@@ -154,8 +199,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                             textFieldDecoration: InputDecoration(
                               labelText: 'Pilih Karyawan',
                               border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSize.s12),
+                                borderRadius: BorderRadius.circular(AppSize.s12),
                               ),
                             ),
                             dropDownList: pegawaiList,
@@ -174,6 +218,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                           ),
                           const SizedBox(height: 16),
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey),
@@ -200,33 +245,50 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 24),
+                          VotingTextField(
+                            title: 'Disiplin',
+                            votingFieldController: disiplinFieldController,
+                            hintText: 'Bobot Disiplin',
+                          ),
+                          VotingTextField(
+                            title: 'Orientasi Pelayanan',
+                            votingFieldController: orientasiFieldController,
+                            hintText: 'Bobot Orientasi Pelayanan',
+                          ),
+                          VotingTextField(
+                            title: 'Inovatif',
+                            votingFieldController: inovatifFieldController,
+                            hintText: 'Bobot Inovatif',
+                          ),
+                          VotingTextField(
+                            title: 'Penampilan, Kecakapan, Kerjasama, dan Tanggung Jawab',
+                            votingFieldController: penampilanFieldController,
+                            hintText: 'Bobot Penampilan, Kecakapan, Kerjasama, dan Tanggung Jawab',
+                          ),
                           const SizedBox(height: 16),
-                          TextField(
-                            controller: bobotController,
-                            decoration: InputDecoration(
-                              labelText: 'Bobot',
-                              hintText: 'Masukkan Bobot',
-                              border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSize.s12),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(AppSize.s12),
+                            ),
+                            child: Text(
+                              'Total Bobot: $totalBobot',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue
                               ),
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                bobot = value.isEmpty ? 0 : int.parse(value);
-                              });
-                            },
                           ),
                           const SizedBox(height: 24),
                           isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : CustomButton(
-                                width: 137,
-                                height: 35,
+                                  width: double.infinity,
+                                  height: 45,
                                   title: 'Simpan Data',
                                   onTap: saveVotingData,
                                 ),
