@@ -2,7 +2,7 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
-import 'package:project_pkl/src/features/voting_page/fill_%20bobot_page/fill_bobot_page.dart';
+import 'package:project_pkl/src/features/voting_page/fill_bobot_page/fill_bobot_page.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
