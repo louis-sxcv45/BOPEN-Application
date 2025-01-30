@@ -19,7 +19,7 @@ class TabBarNavigation extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.logout,
               ),
               onPressed: (){
