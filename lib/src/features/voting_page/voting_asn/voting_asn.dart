@@ -67,9 +67,16 @@ class _VotingDataASNState extends State<VotingDataASN> {
   }
 
   void _navigateToFillBobotPage() async {
+    if (nama.isEmpty || nip.isEmpty) {
+      _showErrorMessage('Silakan pilih karyawan terlebih dahulu');
+      return;
+    }
+
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const FillBobotPage()),
+      MaterialPageRoute(
+        builder: (context) => FillBobotPage(nama: nama, nip: nip, jabatan: jabatan),
+      ),
     );
 
     if (result != null && mounted) {
@@ -80,28 +87,40 @@ class _VotingDataASNState extends State<VotingDataASN> {
   }
   Future<void> saveVotingData() async {
     if (nama.isEmpty || bobotDetails == 0) {
-      _showErrorMessage('Please fill in all required fields');
+      _showErrorMessage('Harap isi semua data yang diperlukan');
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('penilaian_asn').add({
-        'nama': nama,
-        'jabatan': jabatan,
-        'nip': nip,
-        'bobot': bobotDetails, // Now saving as integer
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      final docRef = FirebaseFirestore.instance.collection('penilaian_asn').doc(nip);
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        // 🔹 Update bobot jika NIP sudah ada di database
+        await docRef.update({
+          'bobot': bobotDetails,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // 🔹 Simpan data baru jika NIP belum ada
+        await docRef.set({
+          'nama': nama,
+          'jabatan': jabatan,
+          'nip': nip,
+          'bobot': bobotDetails,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (mounted) {
-        _showSuccessMessage('Data saved successfully!');
+        _showSuccessMessage('Data berhasil disimpan!');
         _resetForm();
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Error saving data: $e');
+        _showErrorMessage('Error menyimpan data: $e');
       }
     } finally {
       if (mounted) {
@@ -109,6 +128,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
       }
     }
   }
+
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
