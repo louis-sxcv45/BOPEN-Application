@@ -58,74 +58,77 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
             scrollDirection: Axis.horizontal,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return DataTable(
-                  columnSpacing: 20,
-                  sortColumnIndex: sortColumnIndex,
-                  sortAscending: sortAscending,
-                  columns: [
-                    const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                    const DataColumn(
-                      label: Expanded(
-                        child: Text('Nama Karyawan')
+                return SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: DataTable(
+                    columnSpacing: 20,
+                    sortColumnIndex: sortColumnIndex,
+                    sortAscending: sortAscending,
+                    columns: [
+                      const DataColumn(
+                        label: Expanded(child: Text('No')),
                       ),
-                    ),
-                    const DataColumn(
-                      label: Expanded(child: Text('NIP')),
-                    ),
-                    const DataColumn(
-                      label: Expanded(child: Text('Jabatan')),
-                    ),
-                    DataColumn(
-                      label: const Expanded(child: Text('Bobot')),
-                      numeric: true,
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          sortColumnIndex = columnIndex;
-                          sortAscending = ascending;
-                        });
-                      },
-                    ),
-                  ],
-                  rows: employees.asMap().entries.map((entry) {
-                    final index = entry.key + 1;
-                    final employee = entry.value;
-
-                    return DataRow(
-                      cells: [
-                        DataCell(Text('$index')),
-                        DataCell(
-                          SizedBox(
-                            width: 200,
-                            child: Text(
-                              employee['nama'] ?? '',
+                      const DataColumn(
+                        label: Expanded(
+                          child: Text('Nama Karyawan')
+                        ),
+                      ),
+                      const DataColumn(
+                        label: Expanded(child: Text('NIP')),
+                      ),
+                      const DataColumn(
+                        label: Expanded(child: Text('Jabatan')),
+                      ),
+                      DataColumn(
+                        label: const Expanded(child: Text('Bobot')),
+                        numeric: true,
+                        onSort: (columnIndex, ascending) {
+                          setState(() {
+                            sortColumnIndex = columnIndex;
+                            sortAscending = ascending;
+                          });
+                        },
+                      ),
+                    ],
+                    rows: employees.asMap().entries.map((entry) {
+                      final index = entry.key + 1;
+                      final employee = entry.value;
+                  
+                      return DataRow(
+                        cells: [
+                          DataCell(Text('$index')),
+                          DataCell(
+                            SizedBox(
+                              width: 200,
+                              child: Text(
+                                employee['nama'] ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              employee['nip'] ?? '',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            employee['nip'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 200,
-                            child: Text(
-                              employee['jabatan'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          DataCell(
+                            SizedBox(
+                              width: 200,
+                              child: Text(
+                                employee['jabatan'] ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
-                        ),
-                        DataCell(Text('${employee['bobot'] ?? 0}')),
-                      ],
-                    );
-                  }).toList(),
+                          DataCell(Text('${employee['bobot'] ?? 0}')),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 );
               },
             ),

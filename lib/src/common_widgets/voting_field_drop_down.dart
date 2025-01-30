@@ -33,7 +33,7 @@ class VotingFieldDropDown extends StatelessWidget {
             fontSize: FontSizeManager.f36,
           ),
         ),
-        SizedBox(
+        const SizedBox(
           height: AppSize.s12,
         ),
         Container(
@@ -57,7 +57,7 @@ class VotingFieldDropDown extends StatelessWidget {
             },
           ),
         ),
-        SizedBox(
+        const SizedBox(
           height: AppSize.s12,
         ),
       ],

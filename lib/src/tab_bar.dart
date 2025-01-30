@@ -13,13 +13,13 @@ class TabBarNavigation extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             'DPMPTSP BOPEN',
             style: TextStyle(),
           ),
           actions: [
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.logout,
               ),
               onPressed: (){
@@ -32,7 +32,7 @@ class TabBarNavigation extends StatelessWidget {
           bottom: TabBar(
             indicatorColor: ColorManager.blue,
             labelColor: ColorManager.blue,
-            tabs: [
+            tabs: const [
               Tab(
                 text: 'ASN',
               ),
@@ -42,7 +42,7 @@ class TabBarNavigation extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
             AsnDataScreen(),
             NonAsnDataScreen(),

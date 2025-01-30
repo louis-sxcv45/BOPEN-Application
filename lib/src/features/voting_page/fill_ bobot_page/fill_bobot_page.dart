@@ -22,7 +22,7 @@ class _FillBobotPageState extends State<FillBobotPage> {
         title: const Text('Fill Bobot Page'),
       ),
       body: Container(
-        margin: EdgeInsets.symmetric(
+        margin: const EdgeInsets.symmetric(
           horizontal: AppMargin.m8
         ),
         child: SingleChildScrollView(
@@ -50,15 +50,15 @@ class _FillBobotPageState extends State<FillBobotPage> {
               ),
 
 
-              SizedBox(
+              const SizedBox(
                 height: AppSize.s12,
               ),
 
               CustomButton(
                 title: 'Simpan', 
                 onTap: () {
-                    int total_bobot = (int.parse(displinFieldController.text) + int.parse(orientasiFieldController.text) + int.parse(inovatifFieldController.text) + int.parse(penampilanFieldController.text)) ~/ 4;
-                  Navigator.pop(context, total_bobot);
+                    int totalBobot = (int.parse(displinFieldController.text) + int.parse(orientasiFieldController.text) + int.parse(inovatifFieldController.text) + int.parse(penampilanFieldController.text)) ~/ 4;
+                  Navigator.pop(context, totalBobot);
                 }, 
                 width: 137, 
                 height: 35
