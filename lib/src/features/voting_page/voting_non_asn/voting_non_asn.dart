@@ -1,8 +1,8 @@
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
+import 'package:project_pkl/src/features/voting_page/fill_%20bobot_page/fill_bobot_page.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
@@ -20,7 +20,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
 
   String nama = '';
   String jabatan = '';
-  int bobot = 0;
+  int bobotDetails = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
@@ -64,8 +64,21 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
     }
   }
 
+  void _navigateToFillBobotPage() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FillBobotPage()),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        bobotDetails = result; // Menampilkan total bobot
+      });
+    }
+  }
+
   Future<void> saveVotingData() async {
-    if (nama.isEmpty || bobot == 0) {
+    if (nama.isEmpty || bobotDetails == 0) {
       _showErrorMessage('Please fill in all required fields');
       return;
     }
@@ -76,7 +89,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       await FirebaseFirestore.instance.collection('penilaian_non_asn').add({
         'nama': nama,
         'jabatan': jabatan,
-        'bobot': bobot, // Now saving as integer
+        'bobot': bobotDetails, // Now saving as integer
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -117,7 +130,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
     setState(() {
       nama = '';
       jabatan = '';
-      bobot = 0;
+      bobotDetails = 0;
       bobotController.clear();
       namaKaryawanController.clearDropDown();
     });
@@ -145,7 +158,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           DropDownTextField(
                             controller: namaKaryawanController,
@@ -174,6 +187,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                           ),
                           const SizedBox(height: 16),
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey),
@@ -201,32 +215,32 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          TextField(
-                            controller: bobotController,
-                            decoration: InputDecoration(
-                              labelText: 'Bobot',
-                              hintText: 'Masukkan Bobot',
-                              border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSize.s12),
+                          if (bobotDetails > 0)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(AppSize.s12),
+                              ),
+                              child: Text(
+                                'Total Bobot: $bobotDetails',
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                bobot = value.isEmpty ? 0 : int.parse(value);
-                              });
-                            },
+                          const SizedBox(height: 24),
+                          CustomButton(
+                            title: 'Isi Nilai Bobot',
+                            onTap: _navigateToFillBobotPage,
+                            width: 137,
+                            height: 35,
                           ),
                           const SizedBox(height: 24),
                           isLoading
                               ? const Center(child: CircularProgressIndicator())
                               : CustomButton(
-                                width: 137,
-                                height: 35,
+                                width: 400,
+                                height: 45,
                                   title: 'Simpan Data',
                                   onTap: saveVotingData,
                                 ),
