@@ -67,19 +67,35 @@ class _FillBobotPageState extends State<FillBobotPage> {
 
   Future<void> _saveData() async {
   try {
-    final docRef = FirebaseFirestore.instance.collection('penilaian_asn').doc(widget.nip);
+    final collectionRef = FirebaseFirestore.instance.collection('penilaian_asn');
 
-    await docRef.set({
-      'nama': widget.nama,
-      'nip': widget.nip,
-      'jabatan': widget.jabatan,
-      'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
-      'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
-      'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
-      'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
-      'bobot': totalBobot,
-      'timestamp': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)); // 🔹 Gunakan merge agar tidak membuat data ganda
+    // Cari apakah sudah ada data dengan NIP yang sama
+    final existingDocs = await collectionRef.where('nip', isEqualTo: widget.nip).get();
+
+    if (existingDocs.docs.isNotEmpty) {
+      // Jika ada, update data pertama yang ditemukan
+      await collectionRef.doc(existingDocs.docs.first.id).update({
+        'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
+        'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
+        'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
+        'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+        'bobot': totalBobot,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Jika belum ada, buat dokumen baru dengan ID acak
+      await collectionRef.add({
+        'nama': widget.nama,
+        'nip': widget.nip,
+        'jabatan': widget.jabatan,
+        'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
+        'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
+        'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
+        'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+        'bobot': totalBobot,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
 
     // Kembali ke halaman sebelumnya dengan mengirim total bobot
     Navigator.pop(context, totalBobot);
@@ -89,6 +105,7 @@ class _FillBobotPageState extends State<FillBobotPage> {
     );
   }
 }
+
 
 
   @override
