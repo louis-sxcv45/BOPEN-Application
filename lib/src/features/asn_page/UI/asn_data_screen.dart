@@ -99,7 +99,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                           DataCell(Text('$index')),
                           DataCell(
                             SizedBox(
-                              width: 150,
+                              width: 200,
                               child: Text(
                                 employee['nama'] ?? '',
                                 maxLines: 2,
@@ -108,13 +108,10 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                             ),
                           ),
                           DataCell(
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                employee['nip'] ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            Text(
+                              employee['nip'] ?? '',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DataCell(
