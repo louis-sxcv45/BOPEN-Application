@@ -39,8 +39,6 @@ dependencies:
   dropdown_textfield: ^1.2.0
   cloud_firestore: ^5.6.1
   firebase_core: ^3.10.0
-
-
   connectivity_plus: ^6.1.2
   
 dev_dependencies:

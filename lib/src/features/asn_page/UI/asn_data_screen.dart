@@ -97,6 +97,10 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                             width: 200,
                             child: Text(
                               employee['nama'] ?? '',
+                      ),
+                          DataCell(
+                            Text(
+                              employee['nip'] ?? '',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),

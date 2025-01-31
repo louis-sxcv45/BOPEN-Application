@@ -8,6 +8,7 @@ import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 
 class VotingNonAsn extends StatefulWidget {
   const VotingNonAsn({super.key});
+
   @override
   State<VotingNonAsn> createState() => _VotingNonAsnState();
 }
@@ -15,6 +16,7 @@ class VotingNonAsn extends StatefulWidget {
 class _VotingNonAsnState extends State<VotingNonAsn> {
   final SingleValueDropDownController namaKaryawanController =
       SingleValueDropDownController();
+  
   final TextEditingController disiplinFieldController = TextEditingController();
   final TextEditingController orientasiFieldController = TextEditingController();
   final TextEditingController inovatifFieldController = TextEditingController();
@@ -82,7 +84,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       debugPrint('Error fetching data: $e');
     }
   }
-
+  
   Future<void> saveVotingData() async {
     if (nama.isEmpty || bobotDetails == 0) {
       _showErrorMessage('Please fill in all required fields');
@@ -282,7 +284,6 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                                 color: Colors.blue
                               ),
                             ),
-                          ),
                           const SizedBox(height: 24),
                           isLoading
                               ? const Center(child: CircularProgressIndicator())

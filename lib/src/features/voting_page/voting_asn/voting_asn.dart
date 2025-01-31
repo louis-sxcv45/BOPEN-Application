@@ -295,7 +295,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 color: Colors.blue
                               ),
                             ),
-                          ),
                           const SizedBox(height: 24),
                           isLoading
                               ? const Center(child: CircularProgressIndicator())
