@@ -68,11 +68,7 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
                     ),
                     const DataColumn(
                       label: Expanded(
-                        child: Text(
-                          'Nama Karyawan',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        )
+                        child: Text('Nama Karyawan',)
                       ),
                     ),
                     const DataColumn(
@@ -92,7 +88,7 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
                   rows: employees.asMap().entries.map((entry) {
                     final index = entry.key + 1;
                     final employee = entry.value;
-
+                
                     return DataRow(
                       cells: [
                         DataCell(Text('$index')),
