@@ -39,6 +39,9 @@ class VotingTextField extends StatelessWidget {
               )
             )
           ),
+          style: TextStyle(
+            fontSize: FontSizeManager.f16,
+          ),
         ),
 
         const SizedBox(

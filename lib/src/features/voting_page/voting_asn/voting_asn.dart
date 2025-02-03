@@ -235,7 +235,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'Nama: $nama',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f12,
+                                    fontSize: FontSizeManager.f16,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -243,7 +243,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'NIP: $nip',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f12,
+                                    fontSize: FontSizeManager.f16,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -251,7 +251,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'Jabatan: $jabatan',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f12,
+                                    fontSize: FontSizeManager.f16,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -263,6 +263,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             title: 'Disiplin',
                             votingFieldController: disiplinFieldController,
                             hintText: 'Bobot Disiplin',
+                            
                           ),
                           VotingTextField(
                             title: 'Orientasi Pelayanan',
