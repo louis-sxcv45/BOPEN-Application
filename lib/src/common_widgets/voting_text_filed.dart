@@ -24,7 +24,7 @@ class VotingTextField extends StatelessWidget {
           ),
         ),
 
-        SizedBox(
+        const SizedBox(
           height: AppSize.s12,
         ),
 
@@ -39,9 +39,12 @@ class VotingTextField extends StatelessWidget {
               )
             )
           ),
+          style: TextStyle(
+            fontSize: FontSizeManager.f16,
+          ),
         ),
 
-        SizedBox(
+        const SizedBox(
           height: AppSize.s12,
         ),
       ],
