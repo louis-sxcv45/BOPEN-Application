@@ -10,11 +10,11 @@ class AsnDataScreen extends StatefulWidget {
 }
 
 class _AsnDataScreenState extends State<AsnDataScreen> {
-  int sortColumnIndex = 4; // Default sort by bobot column (index 4)
+  int sortColumnIndex = 3; // Default sort by bobot column (index 4)
   bool sortAscending = false; // Default descending order
 
   List<Map<String, dynamic>> _sortData(List<Map<String, dynamic>> data) {
-    if (sortColumnIndex == 4) { // Bobot column
+    if (sortColumnIndex == 3) { // Bobot column
       data.sort((a, b) {
         final double valueA = double.tryParse(a['bobot']?.toString() ?? '0') ?? 0;
         final double valueB = double.tryParse(b['bobot']?.toString() ?? '0') ?? 0;
@@ -55,7 +55,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
           employees = _sortData(employees);
 
           return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+            scrollDirection: Axis.vertical,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return DataTable(
@@ -66,19 +66,21 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                     const DataColumn(
                       label: Expanded(child: Text('No')),
                     ),
-                    const DataColumn(
-                      label: Expanded(
-                        child: Text('Nama Karyawan')
+                    DataColumn(
+                      label: SizedBox(
+                        width: constraints.maxWidth * 0.3,
+                        child: const Text('Nama Pegawai',)
                       ),
                     ),
-                    const DataColumn(
-                      label: Expanded(child: Text('NIP')),
-                    ),
-                    const DataColumn(
-                      label: Expanded(child: Text('Jabatan')),
+                    DataColumn(
+                      label: SizedBox(
+                        width: constraints.maxWidth * 0.2,
+                        child: const Text('Jabatan')),
                     ),
                     DataColumn(
-                      label: const Expanded(child: Text('Bobot')),
+                      label: SizedBox(
+                        width: constraints.maxWidth * 0.5,
+                        child: const Text('Bobot')),
                       numeric: true,
                       onSort: (columnIndex, ascending) {
                         setState(() {
@@ -97,7 +99,6 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                         DataCell(Text('$index')),
                         DataCell(
                           SizedBox(
-                            width: 200,
                             child: Text(
                               employee['nama'] ?? '',
                               maxLines: 2,
@@ -106,15 +107,9 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                           ),
                         ),
                         DataCell(
-                          Text(
-                            employee['nip'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: 200,
+                          Container(
+                          width: constraints.maxWidth * 0.2,
+                          padding: const EdgeInsets.only(right: 10),
                             child: Text(
                               employee['jabatan'] ?? '',
                               maxLines: 2,
@@ -122,7 +117,10 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                             ),
                           ),
                         ),
-                        DataCell(Text('${employee['bobot'] ?? 0}')),
+                        DataCell(
+                          Container(
+                            width: constraints.maxWidth * 0.5,
+                            child: Text('${employee['bobot'] ?? 0}'))),
                       ],
                     );
                   }).toList(),
