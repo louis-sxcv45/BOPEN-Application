@@ -3,12 +3,11 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
-import 'package:project_pkl/src/style_manager/values_manager.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
+import 'package:project_pkl/src/style_manager/values_manager.dart';
 
 class VotingNonAsn extends StatefulWidget {
   const VotingNonAsn({super.key});
-
   @override
   State<VotingNonAsn> createState() => _VotingNonAsnState();
 }
@@ -16,7 +15,6 @@ class VotingNonAsn extends StatefulWidget {
 class _VotingNonAsnState extends State<VotingNonAsn> {
   final SingleValueDropDownController namaKaryawanController =
       SingleValueDropDownController();
-  
   final TextEditingController disiplinFieldController = TextEditingController();
   final TextEditingController orientasiFieldController = TextEditingController();
   final TextEditingController inovatifFieldController = TextEditingController();
@@ -24,7 +22,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
 
   String nama = '';
   String jabatan = '';
-  int bobotDetails = 0;
+  int totalBobot = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
@@ -49,7 +47,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       int inovatif = int.tryParse(inovatifFieldController.text) ?? 0;
       int penampilan = int.tryParse(penampilanFieldController.text) ?? 0;
 
-      bobotDetails = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
+      totalBobot = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
     });
   }
 
@@ -84,10 +82,10 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       debugPrint('Error fetching data: $e');
     }
   }
-  
+
   Future<void> saveVotingData() async {
-    if (nama.isEmpty || bobotDetails == 0) {
-      _showErrorMessage('Please fill in all required fields');
+    if (nama.isEmpty || totalBobot == 0) {
+      _showErrorMessage('Harap isi semua data yang diperlukan');
       return;
     }
 
@@ -104,7 +102,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
           'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
           'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
           'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
-          'bobot': bobotDetails,
+          'bobot': totalBobot,
           'timestamp': FieldValue.serverTimestamp(),
         });
       } else {
@@ -116,7 +114,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
           'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
           'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
           'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
-          'bobot': bobotDetails,
+          'bobot': totalBobot,
           'timestamp': FieldValue.serverTimestamp(),
         });
       }
@@ -158,11 +156,11 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
     setState(() {
       nama = '';
       jabatan = '';
+      totalBobot = 0;
       disiplinFieldController.clear();
       orientasiFieldController.clear();
       inovatifFieldController.clear();
       penampilanFieldController.clear();
-      bobotDetails = 0;
       namaKaryawanController.clearDropDown();
     });
   }
@@ -181,7 +179,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fill Voting Data Non ASN'),
+        title: const Text('Fill Voting Data ASN'),
       ),
       body: isDataLoading
           ? const Center(child: CircularProgressIndicator())
@@ -277,7 +275,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
                               borderRadius: BorderRadius.circular(AppSize.s12),
                             ),
                             child: Text(
-                              'Total Bobot: $bobotDetails',
+                              'Total Bobot: $totalBobot',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

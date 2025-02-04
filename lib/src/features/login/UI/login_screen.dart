@@ -97,9 +97,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
-              const SizedBox(height: AppSize.s12),
+              SizedBox(height: AppSize.s12),
               
-              const Text(
+              Text(
                 'Login',
                 textAlign: TextAlign.start,
                 style: TextStyle(
@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
-              const SizedBox(height: AppSize.s12),
+              SizedBox(height: AppSize.s12),
               
               SizedBox(
                 width: 300,
@@ -127,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
-              const SizedBox(height: AppSize.s12),
+              SizedBox(height: AppSize.s12),
               
               SizedBox(
                 width: 300,
@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
-              const SizedBox(height: AppSize.s12),
+              SizedBox(height: AppSize.s12),
               
               isLoading 
                 ? const CircularProgressIndicator()

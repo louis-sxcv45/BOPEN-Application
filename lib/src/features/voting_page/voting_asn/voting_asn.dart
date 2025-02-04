@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
-import 'package:project_pkl/src/style_manager/values_manager.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
+import 'package:project_pkl/src/style_manager/values_manager.dart';
 
 class VotingDataASN extends StatefulWidget {
   const VotingDataASN({super.key});
@@ -235,7 +235,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'Nama: $nama',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f16,
+                                    fontSize: FontSizeManager.f12,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -243,7 +243,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'NIP: $nip',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f16,
+                                    fontSize: FontSizeManager.f12,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -251,7 +251,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                                 Text(
                                   'Jabatan: $jabatan',
                                   style: TextStyle(
-                                    fontSize: FontSizeManager.f16,
+                                    fontSize: FontSizeManager.f12,
                                     fontFamily: FontFamilyManager.latoFont,
                                   ),
                                 ),
@@ -263,7 +263,6 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             title: 'Disiplin',
                             votingFieldController: disiplinFieldController,
                             hintText: 'Bobot Disiplin',
-                            
                           ),
                           VotingTextField(
                             title: 'Orientasi Pelayanan',
