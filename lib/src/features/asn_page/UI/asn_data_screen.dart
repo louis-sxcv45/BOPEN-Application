@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_pkl/src/features/detail_page/asn_detail_page.dart';
 import 'package:project_pkl/src/features/voting_page/voting_asn/voting_asn.dart';
 
 class AsnDataScreen extends StatefulWidget {
@@ -16,8 +17,8 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
   List<Map<String, dynamic>> _sortData(List<Map<String, dynamic>> data) {
     if (sortColumnIndex == 4) { // Bobot column
       data.sort((a, b) {
-        final double valueA = double.tryParse(a['bobot']?.toString() ?? '0') ?? 0;
-        final double valueB = double.tryParse(b['bobot']?.toString() ?? '0') ?? 0;
+        final double valueA = double.tryParse(a['data']['bobot']?.toString() ?? '0') ?? 0;
+        final double valueB = double.tryParse(b['data']['bobot']?.toString() ?? '0') ?? 0;
         return sortAscending ? valueA.compareTo(valueB) : valueB.compareTo(valueA);
       });
     }
@@ -48,7 +49,10 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
           }
 
           List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-            return doc.data() as Map<String, dynamic>;
+            return{ 
+              'id':doc.id,
+              'data':doc.data() as Map<String, dynamic>
+            };
           }).toList();
 
           // Sort the data without setState
@@ -91,6 +95,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                   rows: employees.asMap().entries.map((entry) {
                     final index = entry.key + 1;
                     final employee = entry.value;
+                    final employeeData = employee['data'] as Map<String, dynamic>;
                 
                     return DataRow(
                       cells: [
@@ -99,30 +104,72 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                           SizedBox(
                             width: 200,
                             child: Text(
-                              employee['nama'] ?? '',
+                              employeeData['nama'] ?? '',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AsnDetailPage(
+                                  documentId: employee['id'],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         DataCell(
                           Text(
-                            employee['nip'] ?? '',
+                            employeeData['nip'] ?? '',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AsnDetailPage(
+                                  documentId: employee['id'],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         DataCell(
                           SizedBox(
                             width: 200,
                             child: Text(
-                              employee['jabatan'] ?? '',
+                              employeeData['jabatan'] ?? '',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AsnDetailPage(
+                                  documentId: employee['id'],
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        DataCell(Text('${employee['bobot'] ?? 0}')),
+                        DataCell(
+                          Text('${employeeData['bobot'] ?? 0}'),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AsnDetailPage(
+                                  documentId: employee['id'],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     );
                   }).toList(),
