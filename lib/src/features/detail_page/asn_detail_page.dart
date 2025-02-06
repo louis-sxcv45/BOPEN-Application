@@ -1,10 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
 
-class AsnDetailPage extends StatelessWidget {
+class AsnDetailPage extends StatefulWidget {
   final String documentId;
 
   const AsnDetailPage({super.key, required this.documentId});
+
+  @override
+  State<AsnDetailPage> createState() => _AsnDetailPageState();
+}
+
+class _AsnDetailPageState extends State<AsnDetailPage> {
+  final AsnCollectionManager _collectionManager = AsnCollectionManager();
+  String currentCollection = 'penilaian_asn';
+
+  @override
+  void initState(){
+    super.initState();
+    _loadCurrentCollection();
+  }
+
+  Future<void> _loadCurrentCollection() async{
+    String collection = await _collectionManager.getCurrentCollectionName();
+    setState(() {
+      currentCollection = collection;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +36,8 @@ class AsnDetailPage extends StatelessWidget {
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('penilaian_asn')
-            .doc(documentId)
+            .collection(currentCollection)
+            .doc(widget.documentId)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -89,6 +111,31 @@ class AsnDetailPage extends StatelessWidget {
                                 color: Colors.blue,
                                 fontWeight: FontWeight.w500,
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  //Collection Info Card
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.folder_outlined, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Periode Penilaian: $currentCollection',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue,
                             ),
                           ),
                         ],

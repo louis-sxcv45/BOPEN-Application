@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
 import 'package:project_pkl/src/features/detail_page/non_asn_detail_page.dart';
 import 'package:project_pkl/src/features/voting_page/voting_non_asn/voting_non_asn.dart';
 
@@ -13,6 +14,69 @@ class NonAsnDataScreen extends StatefulWidget {
 class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
   int sortColumnIndex = 3; // Default sort by bobot column (index 4)
   bool sortAscending = false; // Default descending order
+  final NonAsnCollectionManager _collectionManager = NonAsnCollectionManager();
+  String currentCollection = 'penilaian_non_asn';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentCollection();
+  }
+
+  Future<void> _loadCurrentCollection() async {
+    String collection = await _collectionManager.getCurrentCollectionName();
+    setState(() {
+      currentCollection = collection;
+    });
+  }
+
+  Future<void> _handleReset() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Reset'),
+          content: const Text(
+            'Apakah Anda yakin ingin mereset penilaian? '
+            'Data saat ini akan diarsipkan dan form penilaian baru akan dibuat.'
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Reset'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  await _collectionManager.resetAndCreateNewCollection();
+                  await _loadCurrentCollection();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Berhasil mereset penilaian'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Gagal mereset penilaian: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   List<Map<String, dynamic>> _sortData(List<Map<String, dynamic>> data) {
     if (sortColumnIndex == 3) { // Bobot column
@@ -28,6 +92,16 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Data ASN - $currentCollection'),
+        actions: [
+          IconButton(
+            onPressed: _handleReset, 
+            icon: const Icon(Icons.restart_alt),
+            tooltip: 'Reset Penilaian',
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => const VotingNonAsn()));
@@ -35,7 +109,7 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
         child: const Icon(Icons.add),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection("penilaian_non_asn").snapshots(),
+        stream: FirebaseFirestore.instance.collection(currentCollection).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

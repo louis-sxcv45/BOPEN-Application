@@ -3,6 +3,7 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
+import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
 
@@ -20,6 +21,8 @@ class _VotingDataASNState extends State<VotingDataASN> {
   final TextEditingController inovatifFieldController = TextEditingController();
   final TextEditingController penampilanFieldController = TextEditingController();
 
+  final AsnCollectionManager _collectionManager = AsnCollectionManager();
+
   String nip = '';
   String nama = '';
   String jabatan = '';
@@ -28,10 +31,12 @@ class _VotingDataASNState extends State<VotingDataASN> {
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
   String? error;
+  String currentCollection = 'penilaian_asn';
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentCollection();
     _loadPegawaiData();
     
     // Add listeners for bobot calculation
@@ -85,6 +90,13 @@ class _VotingDataASNState extends State<VotingDataASN> {
     }
   }
 
+  Future<void> _loadCurrentCollection() async {
+    String collection = await _collectionManager.getCurrentCollectionName();
+    setState(() {
+      currentCollection = collection;
+    });
+  }
+
   Future<void> saveVotingData() async {
     if (nama.isEmpty || totalBobot == 0) {
       _showErrorMessage('Harap isi semua data yang diperlukan');
@@ -94,7 +106,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
     setState(() => isLoading = true);
 
     try {
-      final collectionRef = FirebaseFirestore.instance.collection('penilaian_asn');
+      final collectionRef = FirebaseFirestore.instance.collection(currentCollection);
       final existingDocs = await collectionRef.where('nip', isEqualTo: nip).get();
 
       if (existingDocs.docs.isNotEmpty) {
