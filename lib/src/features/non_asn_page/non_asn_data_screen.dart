@@ -93,7 +93,13 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Data ASN - $currentCollection'),
+        title: Text(
+          'Data Non ASN - $currentCollection',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _handleReset, 

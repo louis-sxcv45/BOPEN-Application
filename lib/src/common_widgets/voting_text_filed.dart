@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
@@ -30,6 +31,10 @@ class VotingTextField extends StatelessWidget {
 
         TextField(
           controller: votingFieldController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
           decoration: InputDecoration(
             hintText: hintText,
             border: OutlineInputBorder(
