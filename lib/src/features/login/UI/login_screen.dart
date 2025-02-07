@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
@@ -25,6 +26,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        throw Exception("Tidak ada koneksi internet");
+      }
+      
       final username = userNameController.text.trim();
       final password = passwordController.text.trim();
 
