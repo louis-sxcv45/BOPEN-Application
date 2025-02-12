@@ -3,6 +3,7 @@ import 'package:project_pkl/src/features/asn_page/UI/asn_data_screen.dart';
 import 'package:project_pkl/src/features/login/UI/login_screen.dart';
 import 'package:project_pkl/src/features/non_asn_page/non_asn_data_screen.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
+import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 
 class TabBarNavigation extends StatelessWidget {
   const TabBarNavigation({super.key});
@@ -14,8 +15,10 @@ class TabBarNavigation extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'DPMPTSP BOPEN',
-            style: TextStyle(),
+            'Penilaian Pegawai DPMPTSP',
+            style: TextStyle(
+              fontSize: FontSizeManager.f20,
+            ),
           ),
           actions: [
             IconButton(

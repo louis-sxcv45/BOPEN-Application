@@ -94,8 +94,8 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'DPMPTSP BOPEN',
-                textAlign: TextAlign.start,
+                'Penilaian Pegawai DPMPTSP',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: AppSize.s32,
                   fontWeight: FontWeightManager.bold,
