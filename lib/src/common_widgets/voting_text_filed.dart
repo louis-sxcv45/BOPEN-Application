@@ -20,7 +20,7 @@ class VotingTextField extends StatelessWidget {
           textAlign: TextAlign.start,
           style: TextStyle(
             fontFamily: FontFamilyManager.latoFont,
-            fontSize: FontSizeManager.f24,
+            fontSize: FontSizeManager.f16,
             fontWeight: FontWeight.bold
           ),
         ),
@@ -45,7 +45,7 @@ class VotingTextField extends StatelessWidget {
             )
           ),
           style: TextStyle(
-            fontSize: FontSizeManager.f16,
+            fontSize: FontSizeManager.f12,
           ),
         ),
 
