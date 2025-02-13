@@ -139,147 +139,212 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
   }
 
   Widget _buildAssessmentTable(String collectionName) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection(collectionName)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+  // State variables for pagination
+  final int itemsPerPage = 10;
+  final ValueNotifier<int> currentPage = ValueNotifier(1);
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: Text("Tidak ada data untuk periode ini"),
-            ),
-          );
-        }
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection(collectionName)
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
 
-        List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-          return {
-            'id': doc.id,
-            'data': doc.data() as Map<String, dynamic>
-          };
-        }).toList();
-
-        employees = _sortData(employees);
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: LayoutBuilder(
-            builder: (context, constraints){
-              return DataTable(
-                columnSpacing: 20,
-                sortColumnIndex: sortColumnIndex,
-                sortAscending: sortAscending,
-                columns: [
-                  const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.3,
-                        child: const Text('Nama Pegawai',)
-                      ),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.2,
-                        child: const Text('Jabatan')),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.5,
-                        child: const Text('Bobot')),
-                      numeric: true,
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          sortColumnIndex = columnIndex;
-                          sortAscending = ascending;
-                        });
-                      },
-                    ),
-                ],
-                rows: employees.asMap().entries.map((entry) {
-                  final index = entry.key + 1;
-                  final employee = entry.value;
-                  final employeeData = employee['data'] as Map<String, dynamic>;
-              
-                  return DataRow(
-                    cells: [
-                      DataCell(Text('$index')),
-                      DataCell(
-                        SizedBox(
-                          child: Text(
-                            employeeData['nama'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      DataCell(
-                        Container(
-                          width: constraints.maxWidth * 0.2,
-                          padding: const EdgeInsets.only(right: 10),
-                          child: Text(
-                            employeeData['jabatan'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: constraints.maxWidth * 0.5,
-                          child: Text('${employeeData['bobot'] ?? 0}')),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(
+            child: Text("Tidak ada data untuk periode ini"),
           ),
         );
-      },
-    );
-  }
+      }
+
+      List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'data': doc.data() as Map<String, dynamic>
+        };
+      }).toList();
+
+      employees = _sortData(employees);
+
+      // Calculate total pages
+      final int totalItems = employees.length;
+      final int totalPages = (totalItems / itemsPerPage).ceil();
+
+      // Get paginated data
+      return ValueListenableBuilder<int>(
+        valueListenable: currentPage,
+        builder: (context, page, child) {
+          final int startIndex = (page - 1) * itemsPerPage;
+          final int endIndex = startIndex + itemsPerPage > totalItems 
+              ? totalItems 
+              : startIndex + itemsPerPage;
+          
+          final List<Map<String, dynamic>> paginatedEmployees = 
+              employees.sublist(startIndex, endIndex);
+
+          return Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return DataTable(
+                      columnSpacing: 20,
+                      sortColumnIndex: sortColumnIndex,
+                      sortAscending: sortAscending,
+                      columns: [
+                        const DataColumn(
+                          label: Expanded(child: Text('No')),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: constraints.maxWidth * 0.3,
+                            child: const Text('Nama Pegawai',)
+                          ),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: constraints.maxWidth * 0.2,
+                            child: const Text('Jabatan')),
+                        ),
+                        DataColumn(
+                          label: SizedBox(
+                            width: constraints.maxWidth * 0.5,
+                            child: const Text('Bobot')),
+                          numeric: true,
+                          onSort: (columnIndex, ascending) {
+                            setState(() {
+                              sortColumnIndex = columnIndex;
+                              sortAscending = ascending;
+                            });
+                          },
+                        ),
+                      ],
+                      rows: paginatedEmployees.asMap().entries.map((entry) {
+                        final index = startIndex + entry.key + 1;
+                        final employee = entry.value;
+                        final employeeData = employee['data'] as Map<String, dynamic>;
+                    
+                        return DataRow(
+                          cells: [
+                            DataCell(Text('$index')),
+                            DataCell(
+                              SizedBox(
+                                child: Text(
+                                  employeeData['nama'] ?? '',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AsnDetailPage(
+                                      documentId: employee['id'],
+                                      collectionName: collectionName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            DataCell(
+                              Container(
+                                width: constraints.maxWidth * 0.2,
+                                padding: const EdgeInsets.only(right: 10),
+                                child: Text(
+                                  employeeData['jabatan'] ?? '',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AsnDetailPage(
+                                      documentId: employee['id'],
+                                      collectionName: collectionName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: constraints.maxWidth * 0.5,
+                                child: Text('${employeeData['bobot'] ?? 0}')),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AsnDetailPage(
+                                      documentId: employee['id'],
+                                      collectionName: collectionName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Pagination controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios),
+                    onPressed: page > 1 
+                        ? () => currentPage.value-- 
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Halaman $page dari $totalPages',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios),
+                    onPressed: page < totalPages 
+                        ? () => currentPage.value++ 
+                        : null,
+                  ),
+                ],
+              ),
+              // Show total items
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Total: $totalItems data',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
