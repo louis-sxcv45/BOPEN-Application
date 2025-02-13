@@ -16,10 +16,13 @@ class VotingDataASN extends StatefulWidget {
 class _VotingDataASNState extends State<VotingDataASN> {
   final SingleValueDropDownController namaKaryawanController =
       SingleValueDropDownController();
-  final TextEditingController disiplinFieldController = TextEditingController();
-  final TextEditingController orientasiFieldController = TextEditingController();
-  final TextEditingController inovatifFieldController = TextEditingController();
-  final TextEditingController penampilanFieldController = TextEditingController();
+  final TextEditingController oritentasiPelayananFieldController = TextEditingController();
+  final TextEditingController akuntableFieldController = TextEditingController();
+  final TextEditingController kompetenFieldController = TextEditingController();
+  final TextEditingController harmonisFieldController = TextEditingController();
+  final TextEditingController loyalFieldController = TextEditingController();
+  final TextEditingController adaptifFieldController = TextEditingController();
+  final TextEditingController kolaboratifFieldController = TextEditingController();
 
   final AsnCollectionManager _collectionManager = AsnCollectionManager();
 
@@ -40,20 +43,26 @@ class _VotingDataASNState extends State<VotingDataASN> {
     _loadPegawaiData();
     
     // Add listeners for bobot calculation
-    disiplinFieldController.addListener(_hitungTotalBobot);
-    orientasiFieldController.addListener(_hitungTotalBobot);
-    inovatifFieldController.addListener(_hitungTotalBobot);
-    penampilanFieldController.addListener(_hitungTotalBobot);
+    oritentasiPelayananFieldController.addListener(_hitungTotalBobot);
+    akuntableFieldController.addListener(_hitungTotalBobot);
+    kompetenFieldController.addListener(_hitungTotalBobot);
+    harmonisFieldController.addListener(_hitungTotalBobot);
+    loyalFieldController.addListener(_hitungTotalBobot);
+    adaptifFieldController.addListener(_hitungTotalBobot);
+    kolaboratifFieldController.addListener(_hitungTotalBobot);
   }
 
   void _hitungTotalBobot() {
     setState(() {
-      int disiplin = int.tryParse(disiplinFieldController.text) ?? 0;
-      int orientasi = int.tryParse(orientasiFieldController.text) ?? 0;
-      int inovatif = int.tryParse(inovatifFieldController.text) ?? 0;
-      int penampilan = int.tryParse(penampilanFieldController.text) ?? 0;
+      int berorientasi_pelayanan = int.tryParse(oritentasiPelayananFieldController.text) ?? 0;
+      int akuntable = int.tryParse(akuntableFieldController.text) ?? 0;
+      int kompeten = int.tryParse(kompetenFieldController.text) ?? 0;
+      int harmonis = int.tryParse(harmonisFieldController.text) ?? 0;
+      int loyal = int.tryParse(loyalFieldController.text) ?? 0;
+      int adaptif = int.tryParse(adaptifFieldController.text) ?? 0;
+      int kolaboratif = int.tryParse(kolaboratifFieldController.text) ?? 0;
 
-      totalBobot = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
+      totalBobot = (berorientasi_pelayanan + akuntable + kompeten + harmonis + loyal + adaptif + kolaboratif) ~/ 7;
     });
   }
 
@@ -112,10 +121,13 @@ class _VotingDataASNState extends State<VotingDataASN> {
       if (existingDocs.docs.isNotEmpty) {
         // Update existing document
         await collectionRef.doc(existingDocs.docs.first.id).update({
-          'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
-          'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
-          'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
-          'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+          'berorientasi_pelayanan': int.tryParse(oritentasiPelayananFieldController.text) ?? 0,
+          'akuntable': int.tryParse(akuntableFieldController.text) ?? 0,
+          'kompeten': int.tryParse(kompetenFieldController.text) ?? 0,
+          'harmonis': int.tryParse(harmonisFieldController.text) ?? 0,
+          'loyal': int.tryParse(loyalFieldController.text) ?? 0,
+          'adaptif': int.tryParse(adaptifFieldController.text) ?? 0,
+          'kolaboratif': int.tryParse(kolaboratifFieldController.text) ?? 0,
           'bobot': totalBobot,
           'timestamp': FieldValue.serverTimestamp(),
         });
@@ -125,10 +137,13 @@ class _VotingDataASNState extends State<VotingDataASN> {
           'nama': nama,
           'nip': nip,
           'jabatan': jabatan,
-          'disiplin': int.tryParse(disiplinFieldController.text) ?? 0,
-          'orientasi_pelayanan': int.tryParse(orientasiFieldController.text) ?? 0,
-          'inovatif': int.tryParse(inovatifFieldController.text) ?? 0,
-          'penampilan': int.tryParse(penampilanFieldController.text) ?? 0,
+          'berorientasi_pelayanan': int.tryParse(oritentasiPelayananFieldController.text) ?? 0,
+          'akuntable': int.tryParse(akuntableFieldController.text) ?? 0,
+          'kompeten': int.tryParse(kompetenFieldController.text) ?? 0,
+          'harmonis': int.tryParse(harmonisFieldController.text) ?? 0,
+          'loyal': int.tryParse(loyalFieldController.text) ?? 0,
+          'adaptif': int.tryParse(adaptifFieldController.text) ?? 0,
+          'kolaboratif': int.tryParse(adaptifFieldController.text) ?? 0,
           'bobot': totalBobot,
           'timestamp': FieldValue.serverTimestamp(),
         });
@@ -173,10 +188,13 @@ class _VotingDataASNState extends State<VotingDataASN> {
       nip = '';
       jabatan = '';
       totalBobot = 0;
-      disiplinFieldController.clear();
-      orientasiFieldController.clear();
-      inovatifFieldController.clear();
-      penampilanFieldController.clear();
+      oritentasiPelayananFieldController.clear();
+      akuntableFieldController.clear();
+      kompetenFieldController.clear();
+      harmonisFieldController.clear();
+      loyalFieldController.clear();
+      adaptifFieldController.clear();
+      kolaboratifFieldController.clear();
       namaKaryawanController.clearDropDown();
     });
   }
@@ -184,10 +202,13 @@ class _VotingDataASNState extends State<VotingDataASN> {
   @override
   void dispose() {
     namaKaryawanController.dispose();
-    disiplinFieldController.dispose();
-    orientasiFieldController.dispose();
-    inovatifFieldController.dispose();
-    penampilanFieldController.dispose();
+    oritentasiPelayananFieldController.dispose();
+    akuntableFieldController.dispose();
+    kompetenFieldController.dispose();
+    harmonisFieldController.dispose();
+    loyalFieldController.dispose();
+    adaptifFieldController.dispose();
+    kolaboratifFieldController.dispose();
     super.dispose();
   }
 
@@ -212,6 +233,15 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             controller: namaKaryawanController,
                             clearOption: true,
                             enableSearch: true,
+                            clearIconProperty: IconProperty(
+                              color: Colors.black
+                            ),
+                            searchTextStyle: TextStyle(
+                              color: Colors.black
+                            ),
+                            listTextStyle: TextStyle(
+                              color: Colors.black
+                            ),
                             textFieldDecoration: InputDecoration(
                               labelText: 'Pilih Karyawan',
                               border: OutlineInputBorder(
@@ -272,24 +302,39 @@ class _VotingDataASNState extends State<VotingDataASN> {
                           ),
                           const SizedBox(height: 24),
                           VotingTextField(
-                            title: 'Disiplin',
-                            votingFieldController: disiplinFieldController,
-                            hintText: 'Bobot Disiplin',
+                            title: 'Berorientasi Pelayanan (Komitmen Memberikan Pelayanan Prima Demi Kepuasan Masyarakat)',
+                            votingFieldController: oritentasiPelayananFieldController,
+                            hintText: 'Bobot Berorientasi Pelayanan',
                           ),
                           VotingTextField(
-                            title: 'Orientasi Pelayanan',
-                            votingFieldController: orientasiFieldController,
-                            hintText: 'Bobot Orientasi Pelayanan',
+                            title: 'Akuntable (Tanggung Jawab Atas Kepercayaan Yang Diberikan)',
+                            votingFieldController: akuntableFieldController,
+                            hintText: 'Bobot Akuntable',
                           ),
                           VotingTextField(
-                            title: 'Inovatif',
-                            votingFieldController: inovatifFieldController,
-                            hintText: 'Bobot Inovatif',
+                            title: 'Kompeten (Terus Belajar dan Mengembangkan Kapabilitas)',
+                            votingFieldController: kompetenFieldController,
+                            hintText: 'Bobot Kompeten',
                           ),
                           VotingTextField(
-                            title: 'Penampilan, Kecakapan, Kerjasama, dan Tanggung Jawab',
-                            votingFieldController: penampilanFieldController,
-                            hintText: 'Bobot Penampilan, Kecakapan, Kerjasama, dan Tanggung Jawab',
+                            title: 'Harmonis (Saling Perduli dan Menghargai Perbedaan)',
+                            votingFieldController: harmonisFieldController,
+                            hintText: 'Bobot Harmonis',
+                          ),
+                          VotingTextField(
+                            title: 'Loyal (Dedikasi dan Mengutamakan Kepentingan Bangsa dan Negara)',
+                            votingFieldController: loyalFieldController,
+                            hintText: 'Bobot Loyal',
+                          ),
+                          VotingTextField(
+                            title: 'Adaptif (Inovasi dan Antusias dalam Menggerakkan Serta Menghadapi Perubahan)',
+                            votingFieldController: adaptifFieldController,
+                            hintText: 'Bobot Adaptif',
+                          ),
+                          VotingTextField(
+                            title: 'Kolaboratif (Membangun Kerjasama Yang Sinergis)',
+                            votingFieldController: kolaboratifFieldController,
+                            hintText: 'Bobot Kolaboratif',
                           ),
                           const SizedBox(height: 16),
                           Container(

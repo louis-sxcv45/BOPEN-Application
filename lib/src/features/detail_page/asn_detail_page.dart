@@ -164,24 +164,39 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
                           ),
                           const SizedBox(height: 16),
                           _buildScoreItem(
-                            'Disiplin',
-                            data['disiplin']?.toString() ?? '0',
+                            'Berorientasi Pelayanan',
+                            data['berorientasi_pelayanan']?.toString() ?? '0',
                             Colors.blue,
                           ),
                           _buildScoreItem(
-                            'Orientasi Pelayanan',
-                            data['orientasi_pelayanan']?.toString() ?? '0',
+                            'Akuntable',
+                            data['akuntable']?.toString() ?? '0',
                             Colors.green,
                           ),
                           _buildScoreItem(
-                            'Inovatif',
-                            data['inovatif']?.toString() ?? '0',
+                            'Kompeten',
+                            data['kompeten']?.toString() ?? '0',
                             Colors.orange,
                           ),
                           _buildScoreItem(
-                            'Penampilan',
-                            data['penampilan']?.toString() ?? '0',
+                            'Harmonis',
+                            data['harmonis']?.toString() ?? '0',
                             Colors.purple,
+                          ),
+                          _buildScoreItem(
+                            'Loyal',
+                            data['loyal']?.toString() ?? '0',
+                            Colors.red,
+                          ),
+                          _buildScoreItem(
+                            'Adaptif',
+                            data['adaptif']?.toString() ?? '0',
+                            Colors.yellow.shade800,
+                          ),
+                          _buildScoreItem(
+                            'Kolaboratif',
+                            data['kolaboratif']?.toString() ?? '0',
+                            Colors.brown,
                           ),
                           const Divider(thickness: 2),
                           _buildTotalScore(
