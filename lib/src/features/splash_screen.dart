@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/features/login/UI/login_screen.dart';
-import 'package:project_pkl/src/tab_bar.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
