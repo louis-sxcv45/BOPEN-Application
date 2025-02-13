@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_pkl/src/features/assessment_history/non_asn_assessment_history_page.dart';
 import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
 import 'package:project_pkl/src/features/detail_page/non_asn_detail_page.dart';
 import 'package:project_pkl/src/features/voting_page/voting_non_asn/voting_non_asn.dart';
@@ -101,6 +102,18 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NonAsnAssessmentHistoryPage(),
+                ),
+              );
+            },
+            tooltip: 'Lihat Riwayat Penilaian',
+          ),
           IconButton(
             onPressed: _handleReset, 
             icon: const Icon(Icons.restart_alt),

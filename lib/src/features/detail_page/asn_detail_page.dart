@@ -4,8 +4,9 @@ import 'package:project_pkl/src/features/collection_manager_service/collection_m
 
 class AsnDetailPage extends StatefulWidget {
   final String documentId;
+  final String? collectionName;
 
-  const AsnDetailPage({super.key, required this.documentId});
+  const AsnDetailPage({super.key, required this.documentId, this.collectionName,});
 
   @override
   State<AsnDetailPage> createState() => _AsnDetailPageState();
@@ -13,16 +14,17 @@ class AsnDetailPage extends StatefulWidget {
 
 class _AsnDetailPageState extends State<AsnDetailPage> {
   final AsnCollectionManager _collectionManager = AsnCollectionManager();
-  String currentCollection = 'penilaian_asn';
+  String? currentCollection;
 
   @override
   void initState(){
     super.initState();
-    _loadCurrentCollection();
+    _loadCollection();
   }
 
-  Future<void> _loadCurrentCollection() async{
-    String collection = await _collectionManager.getCurrentCollectionName();
+  Future<void> _loadCollection() async{
+    String collection = widget.collectionName ??
+    await _collectionManager.getCurrentCollectionName();
     setState(() {
       currentCollection = collection;
     });
@@ -30,13 +32,21 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    if(currentCollection == null){
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator()
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Pegawai'),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection(currentCollection)
+            .collection(currentCollection!)
             .doc(widget.documentId)
             .snapshots(),
         builder: (context, snapshot) {
