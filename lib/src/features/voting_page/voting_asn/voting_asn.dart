@@ -62,7 +62,8 @@ class _VotingDataASNState extends State<VotingDataASN> {
       int adaptif = int.tryParse(adaptifFieldController.text) ?? 0;
       int kolaboratif = int.tryParse(kolaboratifFieldController.text) ?? 0;
 
-      totalBobot = (berorientasi_pelayanan + akuntable + kompeten + harmonis + loyal + adaptif + kolaboratif) ~/ 7;
+      double rataRata = (berorientasi_pelayanan + akuntable + kompeten + harmonis + loyal + adaptif + kolaboratif) / 7;
+      totalBobot = rataRata.round();
     });
   }
 

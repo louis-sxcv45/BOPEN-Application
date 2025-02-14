@@ -52,7 +52,8 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
       int inovatif = int.tryParse(inovatifFieldController.text) ?? 0;
       int penampilan = int.tryParse(penampilanFieldController.text) ?? 0;
 
-      totalBobot = (disiplin + orientasi + inovatif + penampilan) ~/ 4;
+      double rataRata = (disiplin + orientasi + inovatif + penampilan) / 4;
+      totalBobot = rataRata.round();
     });
   }
 
