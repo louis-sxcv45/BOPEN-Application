@@ -17,6 +17,8 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
   bool sortAscending = false; // Default descending order
   final AsnCollectionManager _collectionManager = AsnCollectionManager();
   String currentCollection = 'penilaian_asn';
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -127,137 +129,170 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
         },
         child: const Icon(Icons.add),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection(currentCollection).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("No Data Found"),
-            );
-          }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SizedBox(
+              width: 300, // Atur ukuran sesuai kebutuhan
+              child: TextField(
+                controller: _searchController,
+                autofocus: false,
+                decoration: const InputDecoration(
+                  labelText: 'Cari Nama Pegawai',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              ),
+            ),
+          ),
 
-          List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-            return{ 
-              'id':doc.id,
-              'data':doc.data() as Map<String, dynamic>
-            };
-          }).toList();
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection(currentCollection).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text("No Data Found"),
+                  );
+                }
+            
+                List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
+                  return{ 
+                    'id':doc.id,
+                    'data':doc.data() as Map<String, dynamic>
+                  };
+                }).toList();
 
-          // Sort the data without setState
-          employees = _sortData(employees);
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return DataTable(
-                  columnSpacing: 20,
-                  sortColumnIndex: sortColumnIndex,
-                  sortAscending: sortAscending,
-                  columns: [
-                    const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.3,
-                        child: const Text('Nama Pegawai',)
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.2,
-                        child: const Text('Jabatan')),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.5,
-                        child: const Text('Bobot')),
-                      numeric: true,
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          sortColumnIndex = columnIndex;
-                          sortAscending = ascending;
-                        });
-                      },
-                    ),
-                  ],
-                  rows: employees.asMap().entries.map((entry) {
-                    final index = entry.key + 1;
-                    final employee = entry.value;
-                    final employeeData = employee['data'] as Map<String, dynamic>;
-                
-                    return DataRow(
-                      cells: [
-                        DataCell(Text('$index')),
-                        DataCell(
-                          SizedBox(
-                            child: Text(
-                              employeeData['nama'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                if (_searchQuery.isNotEmpty) {
+                  employees = employees.where((employee) {
+                    final String nama = employee['data']['nama']?.toString().toLowerCase() ?? '';
+                    return nama.contains(_searchQuery);
+                  }).toList();
+                }
+                // Sort the data without setState
+                employees = _sortData(employees);
+            
+                return SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return DataTable(
+                        columnSpacing: 20,
+                        sortColumnIndex: sortColumnIndex,
+                        sortAscending: sortAscending,
+                        columns: [
+                          const DataColumn(
+                            label: Expanded(child: Text('No')),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.3,
+                              child: const Text('Nama Pegawai',)
                             ),
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AsnDetailPage(
-                                  documentId: employee['id'],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        DataCell(
-                          Container(
-                            width: constraints.maxWidth * 0.2,
-                            padding: const EdgeInsets.only(right: 10),
-                            child: Text(
-                              employeeData['jabatan'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.2,
+                              child: const Text('Jabatan')),
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AsnDetailPage(
-                                  documentId: employee['id'],
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.5,
+                              child: const Text('Bobot')),
+                            numeric: true,
+                            onSort: (columnIndex, ascending) {
+                              setState(() {
+                                sortColumnIndex = columnIndex;
+                                sortAscending = ascending;
+                              });
+                            },
+                          ),
+                        ],
+                        rows: employees.asMap().entries.map((entry) {
+                          final index = entry.key + 1;
+                          final employee = entry.value;
+                          final employeeData = employee['data'] as Map<String, dynamic>;
+                      
+                          return DataRow(
+                            cells: [
+                              DataCell(Text('$index')),
+                              DataCell(
+                                SizedBox(
+                                  child: Text(
+                                    employeeData['nama'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                        DataCell(
-                          SizedBox(
-                            width: constraints.maxWidth * 0.5,
-                            child: Text('${employeeData['bobot'] ?? 0}')),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AsnDetailPage(
-                                  documentId: employee['id'],
+                              DataCell(
+                                Container(
+                                  width: constraints.maxWidth * 0.2,
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: Text(
+                                    employeeData['jabatan'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                              DataCell(
+                                SizedBox(
+                                  width: constraints.maxWidth * 0.5,
+                                  child: Text('${employeeData['bobot'] ?? 0}')),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

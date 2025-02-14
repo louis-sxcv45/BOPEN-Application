@@ -17,6 +17,8 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
   bool sortAscending = false; // Default descending order
   final NonAsnCollectionManager _collectionManager = NonAsnCollectionManager();
   String currentCollection = 'penilaian_non_asn';
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -127,128 +129,163 @@ class _NonAsnDataScreenState extends State<NonAsnDataScreen> {
         },
         child: const Icon(Icons.add),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection(currentCollection).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("No Data Found"),
-            );
-          }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SizedBox(
+              width: 300,
+              child: TextField(
+                controller: _searchController,
+                autofocus: false,
+                decoration: const InputDecoration(
+                  labelText: 'Cari Nama Pegawai',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              ),
+            ),
+          ),
 
-          List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-            return{ 
-              'id':doc.id,
-              'data':doc.data() as Map<String, dynamic>
-            };
-          }).toList();
 
-          // Sort the data without setState
-          employees = _sortData(employees);
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection(currentCollection).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text("No Data Found"),
+                  );
+                }
+            
+                List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
+                  return{ 
+                    'id':doc.id,
+                    'data':doc.data() as Map<String, dynamic>
+                  };
+                }).toList();
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return DataTable(
-                  columnSpacing: 20,
-                  sortColumnIndex: sortColumnIndex,
-                  sortAscending: sortAscending,
-                  columns: [
-                    const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                    const DataColumn(
-                      label: Expanded(
-                        child: Text(
-                          'Nama Pegawai',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      ),
-                    ),
-                    const DataColumn(
-                      label: Expanded(child: Text('Jabatan')),
-                    ),
-                    DataColumn(
-                      label: const Expanded(child: Text('Bobot')),
-                      numeric: true,
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          sortColumnIndex = columnIndex;
-                          sortAscending = ascending;
-                        });
-                      },
-                    ),
-                  ],
-                  rows: employees.asMap().entries.map((entry) {
-                    final index = entry.key + 1;
-                    final employee = entry.value;
-                    final employeeData = employee['data'] as Map<String, dynamic>;
+                if (_searchQuery.isNotEmpty) {
+                  employees = employees.where((employee) {
+                    final String nama = employee['data']['nama']?.toString().toLowerCase() ?? '';
+                    return nama.contains(_searchQuery);
+                  }).toList();
+                }
 
-                    return DataRow(
-                      cells: [
-                        DataCell(Text('$index')),
-                        DataCell(
-                          Text(
-                            employeeData['nama'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                // Sort the data without setState
+                employees = _sortData(employees);
+            
+                return SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return DataTable(
+                        columnSpacing: 20,
+                        sortColumnIndex: sortColumnIndex,
+                        sortAscending: sortAscending,
+                        columns: [
+                          const DataColumn(
+                            label: Expanded(child: Text('No')),
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NonAsnDetailPage(
-                                  documentId: employee['id'],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        DataCell(
-                          Text(
-                            employeeData['jabatan'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          const DataColumn(
+                            label: Expanded(
+                              child: Text(
+                                'Nama Pegawai',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            ),
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NonAsnDetailPage(
-                                  documentId: employee['id'],
+                          const DataColumn(
+                            label: Expanded(child: Text('Jabatan')),
+                          ),
+                          DataColumn(
+                            label: const Expanded(child: Text('Bobot')),
+                            numeric: true,
+                            onSort: (columnIndex, ascending) {
+                              setState(() {
+                                sortColumnIndex = columnIndex;
+                                sortAscending = ascending;
+                              });
+                            },
+                          ),
+                        ],
+                        rows: employees.asMap().entries.map((entry) {
+                          final index = entry.key + 1;
+                          final employee = entry.value;
+                          final employeeData = employee['data'] as Map<String, dynamic>;
+            
+                          return DataRow(
+                            cells: [
+                              DataCell(Text('$index')),
+                              DataCell(
+                                Text(
+                                  employeeData['nama'] ?? '',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                        DataCell(
-                          Text('${employeeData['bobot'] ?? 0}'),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NonAsnDetailPage(
-                                  documentId: employee['id'],
+                              DataCell(
+                                Text(
+                                  employeeData['jabatan'] ?? '',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                              DataCell(
+                                Text('${employeeData['bobot'] ?? 0}'),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

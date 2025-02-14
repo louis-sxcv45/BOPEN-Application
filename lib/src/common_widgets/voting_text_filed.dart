@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
 import 'package:project_pkl/src/style_manager/values_manager.dart';
+import 'package:project_pkl/textInputFormater/range_text_input_formater.dart';
 
 class VotingTextField extends StatelessWidget {
   const VotingTextField({super.key, required this.title, required this.hintText, required this.votingFieldController});
@@ -34,9 +35,10 @@ class VotingTextField extends StatelessWidget {
           keyboardType: TextInputType.number,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
+            RangeTextInputFormater(min: 0, max: 100),
           ],
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: "$hintText (0-100)",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSize.s12),
               borderSide: BorderSide(
