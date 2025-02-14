@@ -15,7 +15,7 @@ class TabBarNavigation extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Penilaian Pegawai DPMPTSP',
+            'BOPEN DPMPTSP',
             style: TextStyle(
               fontSize: FontSizeManager.f20,
             ),
