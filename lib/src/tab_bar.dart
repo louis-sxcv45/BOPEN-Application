@@ -4,9 +4,20 @@ import 'package:project_pkl/src/features/login/UI/login_screen.dart';
 import 'package:project_pkl/src/features/non_asn_page/non_asn_data_screen.dart';
 import 'package:project_pkl/src/style_manager/color_manager.dart';
 import 'package:project_pkl/src/style_manager/font_family_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TabBarNavigation extends StatelessWidget {
   const TabBarNavigation({super.key});
+
+  Future<void> logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userEmail'); // Hapus status login
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +36,7 @@ class TabBarNavigation extends StatelessWidget {
               icon: Icon(
                 Icons.logout,
               ),
-              onPressed: (){
-                Navigator.pushReplacement(
-                  context, 
-                  MaterialPageRoute(builder: (context) => const LoginScreen()));
-              },
+              onPressed: () => logout(context),
             )
           ],
           bottom: TabBar(

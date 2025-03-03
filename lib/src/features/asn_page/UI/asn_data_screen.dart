@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/features/assessment_history/asn_assessment_history_page.dart';
 import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
@@ -19,11 +20,36 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
   String currentCollection = 'penilaian_asn';
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
+  String? _currentUserEmail;
+  String? _currentUserRole;
+  
   @override
   void initState() {
     super.initState();
     _loadCurrentCollection();
+    _getCurrentUserInfo();
+  }
+
+  Future<void> _getCurrentUserInfo() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Dapatkan email user
+      final String email = user.email ?? '';
+      
+      // Dapatkan role user dari Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          _currentUserEmail = email;
+          _currentUserRole = userData['role'] as String?;
+        });
+      }
+    }
   }
 
   Future<void> _loadCurrentCollection() async {
@@ -97,8 +123,8 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Data ASN - $currentCollection',
-           style: TextStyle(
+          'Data ASN - $currentCollection ${_currentUserRole == "penilai" ? "(Penilai)" : ""}',
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -116,19 +142,20 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
             },
             tooltip: 'Lihat Riwayat Penilaian',
           ),
-          IconButton(
-            onPressed: _handleReset, 
-            icon: const Icon(Icons.restart_alt),
-            tooltip: 'Reset Penilaian',
-          ),
+          if (_currentUserRole == "penilai") // Hanya penilai yang bisa reset
+            IconButton(
+              onPressed: _handleReset, 
+              icon: const Icon(Icons.restart_alt),
+              tooltip: 'Reset Penilaian',
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _currentUserRole == "penilai" ? FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => const VotingDataASN()));
         },
         child: const Icon(Icons.add),
-      ),
+      ) : null, // Hanya penilai yang bisa menambah penilaian
       body: Column(
         children: [
           Padding(
@@ -167,12 +194,77 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                   );
                 }
             
-                List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-                  return{ 
-                    'id':doc.id,
-                    'data':doc.data() as Map<String, dynamic>
-                  };
-                }).toList();
+                // Dapatkan semua dokumen penilaian
+                List<Map<String, dynamic>> employees = [];
+                
+                for (var doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final id = doc.id;
+                  
+                  // Jika penilai, filter untuk hanya menampilkan data yang dinilai oleh penilai saat ini
+                  if (_currentUserRole == "penilai") {
+                    // Periksa apakah ada data hasil_penilaian
+                    if (data.containsKey('hasil_penilaian')) {
+                      final List<dynamic> hasilPenilaian = data['hasil_penilaian'] as List<dynamic>;
+                      
+                      // Cek apakah penilai ini ada dalam daftar
+                      final bool penilaiBerpartisipasi = hasilPenilaian.any((penilaian) => 
+                        penilaian['email_penilai'] == _currentUserEmail);
+                      
+                      // Hanya tampilkan data jika penilai ini berpartisipasi
+                      if (penilaiBerpartisipasi) {
+                        // Kalkulasi bobot sebagai penjumlahan rata-rata dari semua penilai
+                        double totalBobot = 0;
+                        
+                        // Jika ada hasil penilaian, hitung rata-rata
+                        if (hasilPenilaian.isNotEmpty) {
+                          for (var penilaian in hasilPenilaian) {
+                            // Asumsikan setiap penilaian memiliki field 'nilai'
+                            if (penilaian.containsKey('nilai')) {
+                              totalBobot += (penilaian['nilai'] as num).toDouble();
+                            }
+                          }
+                        }
+                        
+                        // Perbarui data dengan bobot yang dihitung
+                        final Map<String, dynamic> updatedData = Map<String, dynamic>.from(data);
+                        updatedData['bobot'] = totalBobot.round();
+                        
+                        employees.add({
+                          'id': id,
+                          'data': updatedData,
+                        });
+                      }
+                    }
+                  } else {
+                    // Untuk user biasa, tampilkan semua data dengan bobot yang dihitung
+                    // Kalkulasi bobot sebagai penjumlahan rata-rata dari semua penilai
+                    double totalBobot = 0;
+                    
+                    if (data.containsKey('hasil_penilaian')) {
+                      final List<dynamic> hasilPenilaian = data['hasil_penilaian'] as List<dynamic>;
+                      
+                      // Jika ada hasil penilaian, hitung rata-rata
+                      if (hasilPenilaian.isNotEmpty) {
+                        for (var penilaian in hasilPenilaian) {
+                          // Asumsikan setiap penilaian memiliki field 'nilai'
+                          if (penilaian.containsKey('nilai')) {
+                            totalBobot += (penilaian['nilai'] as num).toDouble();
+                          }
+                        }
+                      }
+                    }
+                    
+                    // Perbarui data dengan bobot yang dihitung
+                    final Map<String, dynamic> updatedData = Map<String, dynamic>.from(data);
+                    updatedData['bobot'] = totalBobot.round();
+                    
+                    employees.add({
+                      'id': id,
+                      'data': updatedData,
+                    });
+                  }
+                }
 
                 if (_searchQuery.isNotEmpty) {
                   employees = employees.where((employee) {
@@ -180,6 +272,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                     return nama.contains(_searchQuery);
                   }).toList();
                 }
+                
                 // Sort the data without setState
                 employees = _sortData(employees);
             
@@ -270,7 +363,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
                               DataCell(
                                 SizedBox(
                                   width: constraints.maxWidth * 0.5,
-                                  child: Text('${employeeData['bobot'] ?? 0}')),
+                                  child: Text('${employeeData['bobot']?.toString() ?? 0}')),
                                 onTap: () {
                                   Navigator.push(
                                     context,
