@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:project_pkl/src/common_widgets/custom_button.dart';
 import 'package:project_pkl/src/common_widgets/voting_text_filed.dart';
@@ -29,17 +30,19 @@ class _VotingDataASNState extends State<VotingDataASN> {
   String nip = '';
   String nama = '';
   String jabatan = '';
-  int totalBobot = 0;
+  double totalBobot = 0;
   bool isLoading = false;
   bool isDataLoading = true;
   List<DropDownValueModel> pegawaiList = [];
   String? error;
   String currentCollection = 'penilaian_asn';
+  String? _currentUserEmail;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentCollection();
+    _getCurrentUserInfo();
     _loadPegawaiData();
     
     // Add listeners for bobot calculation
@@ -52,6 +55,15 @@ class _VotingDataASNState extends State<VotingDataASN> {
     kolaboratifFieldController.addListener(_hitungTotalBobot);
   }
 
+  Future<void> _getCurrentUserInfo() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _currentUserEmail = user.email;
+      });
+    }
+  }
+
   void _hitungTotalBobot() {
     setState(() {
       int berorientasi_pelayanan = int.tryParse(oritentasiPelayananFieldController.text) ?? 0;
@@ -62,9 +74,23 @@ class _VotingDataASNState extends State<VotingDataASN> {
       int adaptif = int.tryParse(adaptifFieldController.text) ?? 0;
       int kolaboratif = int.tryParse(kolaboratifFieldController.text) ?? 0;
 
-      double rataRata = (berorientasi_pelayanan + akuntable + kompeten + harmonis + loyal + adaptif + kolaboratif) / 7;
-      totalBobot = rataRata.round();
+      // Validasi nilai (maksimal 100 untuk total)
+      berorientasi_pelayanan = _validateInput(berorientasi_pelayanan);
+      akuntable = _validateInput(akuntable);
+      kompeten = _validateInput(kompeten);
+      harmonis = _validateInput(harmonis);
+      loyal = _validateInput(loyal);
+      adaptif = _validateInput(adaptif);
+      kolaboratif = _validateInput(kolaboratif);
+
+      // Menghitung rata-rata dari 7 kriteria
+      totalBobot = ((berorientasi_pelayanan + akuntable + kompeten + harmonis + loyal + adaptif + kolaboratif) / 7).round() as double;
     });
+  }
+
+  int _validateInput(int value) {
+    // Memastikan nilai tidak melebihi 100
+    return value > 100 ? 100 : value;
   }
 
   Future<void> _loadPegawaiData() async {
@@ -119,33 +145,72 @@ class _VotingDataASNState extends State<VotingDataASN> {
       final collectionRef = FirebaseFirestore.instance.collection(currentCollection);
       final existingDocs = await collectionRef.where('nip', isEqualTo: nip).get();
 
+      // Menyiapkan data detail penilaian
+      final Map<String, dynamic> detailPenilaian = {
+        'berorientasi_pelayanan': int.tryParse(oritentasiPelayananFieldController.text) ?? 0,
+        'akuntable': int.tryParse(akuntableFieldController.text) ?? 0,
+        'kompeten': int.tryParse(kompetenFieldController.text) ?? 0,
+        'harmonis': int.tryParse(harmonisFieldController.text) ?? 0,
+        'loyal': int.tryParse(loyalFieldController.text) ?? 0,
+        'adaptif': int.tryParse(adaptifFieldController.text) ?? 0,
+        'kolaboratif': int.tryParse(kolaboratifFieldController.text) ?? 0,
+      };
+
+      // Use regular DateTime instead of FieldValue.serverTimestamp() in arrays
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+
+      // Menyiapkan data penilaian penilai
+      final Map<String, dynamic> penilaianData = {
+        'email_penilai': _currentUserEmail,
+        'nilai': totalBobot.round(),
+        'detail_penilaian': detailPenilaian,
+        'timestamp': now, // Use regular datetime for inside arrays
+      };
+
       if (existingDocs.docs.isNotEmpty) {
-        // Update existing document
-        await collectionRef.doc(existingDocs.docs.first.id).update({
-          'berorientasi_pelayanan': int.tryParse(oritentasiPelayananFieldController.text) ?? 0,
-          'akuntable': int.tryParse(akuntableFieldController.text) ?? 0,
-          'kompeten': int.tryParse(kompetenFieldController.text) ?? 0,
-          'harmonis': int.tryParse(harmonisFieldController.text) ?? 0,
-          'loyal': int.tryParse(loyalFieldController.text) ?? 0,
-          'adaptif': int.tryParse(adaptifFieldController.text) ?? 0,
-          'kolaboratif': int.tryParse(kolaboratifFieldController.text) ?? 0,
-          'bobot': totalBobot,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+        // Dokumen ASN sudah ada, perbarui atau tambah hasil penilaian
+        final docRef = existingDocs.docs.first.reference;
+        final docData = existingDocs.docs.first.data();
+        
+        // Periksa apakah ada hasil_penilaian
+        if (docData.containsKey('hasil_penilaian')) {
+          final List<dynamic> hasilPenilaian = List<dynamic>.from(docData['hasil_penilaian']);
+          
+          // Cari penilaian dari email yang sama
+          bool penilaianDitemukan = false;
+          for (int i = 0; i < hasilPenilaian.length; i++) {
+            if (hasilPenilaian[i]['email_penilai'] == _currentUserEmail) {
+              // Perbarui penilaian yang sudah ada
+              hasilPenilaian[i] = penilaianData;
+              penilaianDitemukan = true;
+              break;
+            }
+          }
+          
+          // Jika tidak ada penilaian dari email ini, tambahkan ke list
+          if (!penilaianDitemukan) {
+            hasilPenilaian.add(penilaianData);
+          }
+          
+          // Update dokumen dengan hasil penilaian yang baru
+          await docRef.update({
+            'hasil_penilaian': hasilPenilaian,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+        } else {
+          // Buat array hasil_penilaian baru
+          await docRef.update({
+            'hasil_penilaian': [penilaianData],
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+        }
       } else {
         // Create new document
         await collectionRef.add({
           'nama': nama,
           'nip': nip,
           'jabatan': jabatan,
-          'berorientasi_pelayanan': int.tryParse(oritentasiPelayananFieldController.text) ?? 0,
-          'akuntable': int.tryParse(akuntableFieldController.text) ?? 0,
-          'kompeten': int.tryParse(kompetenFieldController.text) ?? 0,
-          'harmonis': int.tryParse(harmonisFieldController.text) ?? 0,
-          'loyal': int.tryParse(loyalFieldController.text) ?? 0,
-          'adaptif': int.tryParse(adaptifFieldController.text) ?? 0,
-          'kolaboratif': int.tryParse(adaptifFieldController.text) ?? 0,
-          'bobot': totalBobot,
+          'hasil_penilaian': [penilaianData],
           'timestamp': FieldValue.serverTimestamp(),
         });
       }
@@ -217,14 +282,14 @@ class _VotingDataASNState extends State<VotingDataASN> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fill Voting Data ASN'),
+        title: const Text('Form Penilaian ASN'),
       ),
       body: isDataLoading
           ? const Center(child: CircularProgressIndicator())
           : error != null
               ? Center(child: Text(error!))
               : pegawaiList.isEmpty
-                  ? const Center(child: Text('No data available'))
+                  ? const Center(child: Text('Tidak ada data tersedia'))
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -237,14 +302,14 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             clearIconProperty: IconProperty(
                               color: Colors.black
                             ),
-                            searchTextStyle: TextStyle(
+                            searchTextStyle: const TextStyle(
                               color: Colors.black
                             ),
-                            listTextStyle: TextStyle(
+                            listTextStyle: const TextStyle(
                               color: Colors.black
                             ),
                             textFieldDecoration: InputDecoration(
-                              labelText: 'Pilih Karyawan',
+                              labelText: 'Pilih Pegawai',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppSize.s12),
                               ),
@@ -302,6 +367,15 @@ class _VotingDataASNState extends State<VotingDataASN> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          Text(
+                            'Kriteria Penilaian (Nilai 0-100)',
+                            style: TextStyle(
+                              fontSize: FontSizeManager.f16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: FontFamilyManager.latoFont,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           VotingTextField(
                             title: 'Berorientasi Pelayanan (Komitmen Memberikan Pelayanan Prima Demi Kepuasan Masyarakat)',
                             votingFieldController: oritentasiPelayananFieldController,
@@ -346,7 +420,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                               borderRadius: BorderRadius.circular(AppSize.s12),
                             ),
                             child: Text(
-                              'Total Bobot: $totalBobot',
+                              'Total Bobot: ${totalBobot.toString()}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -360,7 +434,7 @@ class _VotingDataASNState extends State<VotingDataASN> {
                               : CustomButton(
                                   width: double.infinity,
                                   height: 45,
-                                  title: 'Simpan Data',
+                                  title: 'Simpan Penilaian',
                                   onTap: saveVotingData,
                                 ),
                         ],
