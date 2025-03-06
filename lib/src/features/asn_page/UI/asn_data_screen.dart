@@ -30,6 +30,19 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
     _getCurrentUserInfo();
   }
 
+  String _formatCollectionName(String collectionName) {
+  if (collectionName == 'penilaian_asn') {
+    return 'Triwulan 1'; // Jika koleksi default (tanpa angka)
+  }
+  // Ekstrak angka dari nama koleksi (misal: penilaian_asn_2 -> 2)
+  final parts = collectionName.split('_');
+  if (parts.length > 2) {
+    final number = parts.last;
+    return 'Triwulan $number';
+  }
+  return 'Triwulan 1'; // Fallback jika format tidak sesuai
+  }
+
   Future<void> _getCurrentUserInfo() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -123,7 +136,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Data ASN - $currentCollection ${_currentUserRole == "penilai" ? "(Penilai)" : ""}',
+          'Hasil Penilaian - ${_formatCollectionName(currentCollection)}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -142,7 +155,7 @@ class _AsnDataScreenState extends State<AsnDataScreen> {
             },
             tooltip: 'Lihat Riwayat Penilaian',
           ),
-          if (_currentUserRole == "penilai") // Hanya penilai yang bisa reset
+          if (_currentUserRole == "admin") // Hanya admin yang bisa reset
             IconButton(
               onPressed: _handleReset, 
               icon: const Icon(Icons.restart_alt),

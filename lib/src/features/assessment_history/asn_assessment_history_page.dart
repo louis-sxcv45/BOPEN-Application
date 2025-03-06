@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
@@ -16,12 +17,33 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
   Map<String, bool> expandedStates = {};
   int sortColumnIndex = 3;
   bool sortAscending = false;
+  String? _currentUserRole;
 
   @override
   void initState() {
     super.initState();
     _collectionManager.setupCollectionChangeListener();
     _loadCollections();
+    _getCurrentUserInfo();
+  }
+
+  Future<void> _getCurrentUserInfo() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      
+      // Dapatkan role user dari Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          _currentUserRole = userData['role'] as String?;
+        });
+      }
+    }
   }
 
   Future<void> _loadCollections() async {
@@ -121,10 +143,10 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
 
   String _formatCollectionName(String name) {
     if (name == 'penilaian_asn') {
-      return 'Periode Penilaian 1';
+      return 'Periode Penilaian Triwulan 1';
     }
     final periodNumber = name.split('_').last;
-    return 'Periode Penilaian $periodNumber';
+    return 'Periode Penilaian Triwulan $periodNumber';
   }
 
   List<Map<String, dynamic>> _sortData(List<Map<String, dynamic>> data) {
@@ -164,9 +186,33 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
       }
 
       List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
+        
+          final data = doc.data() as Map<String, dynamic>;
+          final id = doc.id;
+        
+
+        // Hitung bobot dari hasil_penilaian
+        double totalBobot = 0;
+        if (data.containsKey('hasil_penilaian')) {
+          final List<dynamic> hasilPenilaian = data['hasil_penilaian'] as List<dynamic>;
+          if (hasilPenilaian.isNotEmpty) {
+            for (var penilaian in hasilPenilaian) {
+              if (penilaian.containsKey('nilai')) {
+                totalBobot += (penilaian['nilai'] as num).toDouble();
+              }
+            }
+          }
+        }
+        // Bulatkan ke bilangan bulat
+        totalBobot = totalBobot.round() as double;
+
+        // Perbarui data dengan bobot yang dihitung
+        final Map<String, dynamic> updatedData = Map<String, dynamic>.from(data);
+        updatedData['bobot'] = totalBobot;
+
         return {
-          'id': doc.id,
-          'data': doc.data() as Map<String, dynamic>
+          'id': id,
+          'data': updatedData,
         };
       }).toList();
 
@@ -279,7 +325,7 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
                             DataCell(
                               SizedBox(
                                 width: constraints.maxWidth * 0.5,
-                                child: Text('${employeeData['bobot'] ?? 0}')),
+                                child: Text('${employeeData['bobot']?.toString() ?? '0'}')),
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -375,6 +421,7 @@ class _AsnAssessmentHistoryPageState extends State<AsnAssessmentHistoryPage> {
                     children: [
                       // Hanya tampilkan tombol hapus jika bukan collection aktif
                       //if (index != 0) // Assuming newest collection is at index 0
+                      if (_currentUserRole == "admin") // Hanya admin yang bisa hapus
                         IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
                           onPressed: () => _deleteCollection(collection),
