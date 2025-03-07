@@ -1,0 +1,2 @@
+C:/Users/louis/project_pkl/android/app/.cxx/Debug/175r2p44/x86/CMakeFiles/edit_cache.dir
+C:/Users/louis/project_pkl/android/app/.cxx/Debug/175r2p44/x86/CMakeFiles/rebuild_cache.dir

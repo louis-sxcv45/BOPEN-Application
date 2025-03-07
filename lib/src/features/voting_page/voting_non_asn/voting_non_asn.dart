@@ -192,7 +192,7 @@ class _VotingNonAsnState extends State<VotingNonAsn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fill Voting Data Non ASN'),
+        title: const Text('Fill Voting Data ASN'),
       ),
       body: isDataLoading
           ? const Center(child: CircularProgressIndicator())
