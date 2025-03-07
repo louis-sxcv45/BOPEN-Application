@@ -29,6 +29,36 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
     });
   }
 
+  Future<String> _getNamaPenilai(String emailPenilai) async {
+  try {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: emailPenilai)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final userData = querySnapshot.docs.first.data();
+      return userData['nama'] ?? 'Unknown'; // Ambil nama pengguna
+    }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
+    return 'Unknown'; // Fallback jika data tidak ditemukan
+  }
+
+  String _formatCollectionName(String collectionName) {
+  if (collectionName == 'penilaian_asn') {
+    return 'Triwulan 1'; // Jika koleksi default (tanpa angka)
+  }
+  // Ekstrak angka dari nama koleksi (misal: penilaian_asn_2 -> 2)
+  final parts = collectionName.split('_');
+  if (parts.length > 2) {
+    final number = parts.last;
+    return 'Triwulan $number';
+  }
+  return 'Triwulan 1'; // Fallback jika format tidak sesuai
+  }
+
   @override
   Widget build(BuildContext context) {
     if (currentCollection == null) {
@@ -69,7 +99,7 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
               : [];
 
           // Calculate total bobot from all evaluators
-          double totalBobot = 0;
+          /*double totalBobot = 0;
           if (hasilPenilaian.isNotEmpty) {
             for (var penilaian in hasilPenilaian) {
               if (penilaian.containsKey('nilai')) {
@@ -78,7 +108,39 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
             }
           }
           // Bulatkan ke bilangan bulat
-          totalBobot = totalBobot.round() as double;
+          totalBobot = totalBobot.round() as double;*/
+
+          // Calculate average for each parameter
+          Map<String, double> parameterAverages = {};
+          if (hasilPenilaian.isNotEmpty) {
+            List<String> parameters = [
+              'berorientasi_pelayanan',
+              'akuntable',
+              'kompeten',
+              'harmonis',
+              'loyal',
+              'adaptif',
+              'kolaboratif',
+            ];
+
+            for (var parameter in parameters) {
+              double total = 0;
+              int count = 0;
+              for (var penilaian in hasilPenilaian) {
+                if (penilaian['detail_penilaian'] != null && penilaian['detail_penilaian'][parameter] != null) {
+                  total += (penilaian['detail_penilaian'][parameter] as num).toDouble();
+                  count++;
+                }
+              }
+              parameterAverages[parameter] = count > 0 ? (total / count).roundToDouble() : 0;
+            }
+          }
+
+          // Calculate grand total from parameter averages
+          double grandTotal = parameterAverages.values.reduce((a, b) => a + b);
+
+          //Calculate total bobot as average of parameter averages
+          double totalBobot = grandTotal / parameterAverages.length;
 
           return SingleChildScrollView(
             child: Padding(
@@ -155,7 +217,7 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Periode Penilaian: $currentCollection',
+                              'Periode Penilaian: ${_formatCollectionName(currentCollection!)}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.blue,
@@ -184,99 +246,105 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
                   // Dynamic Cards for each evaluator's assessment
                   ...hasilPenilaian.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final penilaian = entry.value as Map<String, dynamic>;
-                    final emailPenilai = penilaian['email_penilai'] ?? 'Penilai ${index + 1}';
+                    final penilaian = entry.value;
+                    final emailPenilai = penilaian['email_penilai'] ?? 'Unknown Penilai';
                     final detailPenilaian = penilaian['detail_penilaian'] as Map<String, dynamic>? ?? {};
                     final nilai = penilaian['nilai'] ?? 0;
                     final timestamp = penilaian['timestamp'];
-
                     // Generate a color based on the evaluator index
                     final Color cardColor = Colors.primaries[index % Colors.primaries.length];
 
-                    return Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: BorderSide(color: cardColor.withOpacity(0.3), width: 1.5),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    return FutureBuilder<String>(
+                      future: _getNamaPenilai(emailPenilai), // Ambil nama penilai
+                      builder: (context, snapshot) {
+                        ///final namaPenilai = snapshot.data ?? 'Unknown Penilai'; // Default jika data tidak ditemukan
+
+                        return Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: BorderSide(color: Colors.blue.withOpacity(0.3), width: 1.5),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.person_outline, color: cardColor),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Penilai: $emailPenilai',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: cardColor,
+                                Row(
+                                  children: [
+                                    Icon(Icons.person_outline, color: cardColor),
+                                    const SizedBox(width: 8),
+                                    /*Expanded(
+                                      child: Text(
+                                       'Penilai: $namaPenilai', // Tampilkan nama penilai
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: cardColor,
+                                        ),
+                                      ),
+                                    ),*/
+                                  ],
+                                ),
+                                const Divider(thickness: 1.5),
+                                const SizedBox(height: 12),
+                                _buildScoreItem(
+                                  'Berorientasi Pelayanan',
+                                  detailPenilaian['berorientasi_pelayanan']?.toString() ?? '0',
+                                  Colors.blue,
+                                ),
+                                _buildScoreItem(
+                                  'Akuntable',
+                                  detailPenilaian['akuntable']?.toString() ?? '0',
+                                  Colors.green,
+                                ),
+                                _buildScoreItem(
+                                  'Kompeten',
+                                  detailPenilaian['kompeten']?.toString() ?? '0',
+                                  Colors.orange,
+                                ),
+                                _buildScoreItem(
+                                  'Harmonis',
+                                  detailPenilaian['harmonis']?.toString() ?? '0',
+                                  Colors.purple,
+                                ),
+                                _buildScoreItem(
+                                  'Loyal',
+                                  detailPenilaian['loyal']?.toString() ?? '0',
+                                  Colors.red,
+                                ),
+                                _buildScoreItem(
+                                  'Adaptif',
+                                  detailPenilaian['adaptif']?.toString() ?? '0',
+                                  Colors.yellow.shade800,
+                                ),
+                                _buildScoreItem(
+                                  'Kolaboratif',
+                                  detailPenilaian['kolaboratif']?.toString() ?? '0',
+                                  Colors.brown,
+                                ),
+                                const Divider(thickness: 1.5),
+                                _buildTotalScore(
+                                  nilai.toString(),
+                                  cardColor,
+                                ),
+                                if (timestamp != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      'Waktu penilaian: ${_formatTimestamp(timestamp)}',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
-                                ),
                               ],
                             ),
-                            const Divider(thickness: 1.5),
-                            const SizedBox(height: 12),
-                            _buildScoreItem(
-                              'Berorientasi Pelayanan',
-                              detailPenilaian['berorientasi_pelayanan']?.toString() ?? '0',
-                              Colors.blue,
-                            ),
-                            _buildScoreItem(
-                              'Akuntable',
-                              detailPenilaian['akuntable']?.toString() ?? '0',
-                              Colors.green,
-                            ),
-                            _buildScoreItem(
-                              'Kompeten',
-                              detailPenilaian['kompeten']?.toString() ?? '0',
-                              Colors.orange,
-                            ),
-                            _buildScoreItem(
-                              'Harmonis',
-                              detailPenilaian['harmonis']?.toString() ?? '0',
-                              Colors.purple,
-                            ),
-                            _buildScoreItem(
-                              'Loyal',
-                              detailPenilaian['loyal']?.toString() ?? '0',
-                              Colors.red,
-                            ),
-                            _buildScoreItem(
-                              'Adaptif',
-                              detailPenilaian['adaptif']?.toString() ?? '0',
-                              Colors.yellow.shade800,
-                            ),
-                            _buildScoreItem(
-                              'Kolaboratif',
-                              detailPenilaian['kolaboratif']?.toString() ?? '0',
-                              Colors.brown,
-                            ),
-                            const Divider(thickness: 1.5),
-                            _buildTotalScore(
-                              nilai.toString(),
-                              cardColor,
-                            ),
-                            if (timestamp != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  'Waktu penilaian: ${_formatTimestamp(timestamp)}',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   }).toList(),
 
@@ -349,11 +417,19 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
+                            ...parameterAverages.entries.map((entry) {
+                              return _buildScoreItem(
+                                entry.key.replaceAll('_', ' ').toUpperCase(),
+                                entry.value.toString(),
+                                Colors.blue,
+                              );
+                            }).toList(),
+                            const SizedBox(height: 12),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Total Keseluruhan Bobot:',
+                                  'Grand Total:',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -370,7 +446,7 @@ class _AsnDetailPageState extends State<AsnDetailPage> {
                                     border: Border.all(color: Colors.blue, width: 2),
                                   ),
                                   child: Text(
-                                    totalBobot.toString(),
+                                    totalBobot.round().toString(),
                                     style: const TextStyle(
                                       color: Colors.blue,
                                       fontWeight: FontWeight.bold,

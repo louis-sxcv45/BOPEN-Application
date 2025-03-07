@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_pkl/src/features/collection_manager_service/collection_manager.dart';
@@ -16,12 +17,33 @@ class _NonAsnAssessmentHistoryPageState extends State<NonAsnAssessmentHistoryPag
   Map<String, bool> expandedStates = {};
   int sortColumnIndex = 3;
   bool sortAscending = false;
+  String? _currentUserRole;
 
   @override
   void initState() {
     super.initState();
     _collectionManager.setupCollectionChangeListener();
     _loadCollections();
+    _getCurrentUserInfo();
+  }
+
+  Future<void> _getCurrentUserInfo() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      
+      // Dapatkan role user dari Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          _currentUserRole = userData['role'] as String?;
+        });
+      }
+    }
   }
 
   Future<void> _loadCollections() async {
@@ -97,8 +119,8 @@ class _NonAsnAssessmentHistoryPageState extends State<NonAsnAssessmentHistoryPag
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Collection berhasil dihapus. Versi sekarang: $currentVersion'),
+            const SnackBar(
+              content: Text('Collection berhasil dihapus'),
               backgroundColor: Colors.green,
             ),
           );
@@ -140,6 +162,10 @@ class _NonAsnAssessmentHistoryPageState extends State<NonAsnAssessmentHistoryPag
   }
 
   Widget _buildAssessmentTable(String collectionName) {
+    // State variables for pagination
+    final int itemsPerPage = 10;
+    final ValueNotifier<int> currentPage = ValueNotifier(1);
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection(collectionName)
@@ -161,122 +187,205 @@ class _NonAsnAssessmentHistoryPageState extends State<NonAsnAssessmentHistoryPag
         }
 
         List<Map<String, dynamic>> employees = snapshot.data!.docs.map((doc) {
-          return {
-            'id': doc.id,
-            'data': doc.data() as Map<String, dynamic>
-          };
-        }).toList();
+          final data = doc.data() as Map<String, dynamic>;
+          final id = doc.id;
 
-        employees = _sortData(employees);
+          // Hitung bobot dari hasil_penilaian
+        double totalBobot = 0;
+        if (data.containsKey('hasil_penilaian')) {
+          final List<dynamic> hasilPenilaian = data['hasil_penilaian'] as List<dynamic>;
+          if (hasilPenilaian.isNotEmpty) {
+            for (var penilaian in hasilPenilaian) {
+              if (penilaian.containsKey('nilai')) {
+                totalBobot += (penilaian['nilai'] as num).toDouble();
+              }
+            }
+          }
+        }
+        // Bulatkan ke bilangan bulat
+        totalBobot = totalBobot.round() as double;
 
-        return SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: LayoutBuilder(
-            builder: (context, constraints){
-              return DataTable(
-                columnSpacing: 20,
-                sortColumnIndex: sortColumnIndex,
-                sortAscending: sortAscending,
-                columns: [
-                  const DataColumn(
-                      label: Expanded(child: Text('No')),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.3,
-                        child: const Text('Nama Pegawai',)
-                      ),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.2,
-                        child: const Text('Jabatan')),
-                    ),
-                  DataColumn(
-                      label: SizedBox(
-                        width: constraints.maxWidth * 0.5,
-                        child: const Text('Bobot')),
-                      numeric: true,
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          sortColumnIndex = columnIndex;
-                          sortAscending = ascending;
-                        });
-                      },
-                    ),
-                ],
-                rows: employees.asMap().entries.map((entry) {
-                  final index = entry.key + 1;
-                  final employee = entry.value;
-                  final employeeData = employee['data'] as Map<String, dynamic>;
-              
-                  return DataRow(
-                    cells: [
-                      DataCell(Text('$index')),
-                      DataCell(
-                        SizedBox(
-                          child: Text(
-                            employeeData['nama'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+        // Perbarui data dengan bobot yang dihitung
+        final Map<String, dynamic> updatedData = Map<String, dynamic>.from(data);
+        updatedData['bobot'] = totalBobot;
+
+        return {
+          'id': id,
+          'data': updatedData,
+        };
+      }).toList();
+
+      employees = _sortData(employees);
+
+        // Calculate total pages
+        final int totalItems = employees.length;
+        final int totalPages = (totalItems / itemsPerPage).ceil();
+
+        // Get paginated data
+        return ValueListenableBuilder<int>(
+          valueListenable: currentPage,
+          builder: (context, page, child) {
+            final int startIndex = (page - 1) * itemsPerPage;
+            final int endIndex = startIndex + itemsPerPage > totalItems 
+                ? totalItems 
+                : startIndex + itemsPerPage;
+            
+            final List<Map<String, dynamic>> paginatedEmployees = 
+                employees.sublist(startIndex, endIndex);
+
+            return Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return DataTable(
+                        columnSpacing: 20,
+                        sortColumnIndex: sortColumnIndex,
+                        sortAscending: sortAscending,
+                        columns: [
+                          const DataColumn(
+                            label: Expanded(child: Text('No')),
                           ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => NonAsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
-                              ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.3,
+                              child: const Text('Nama Pegawai',)
                             ),
-                          );
-                        },
-                      ),
-                      DataCell(
-                        Container(
-                          width: constraints.maxWidth * 0.2,
-                          padding: const EdgeInsets.only(right: 10),
-                          child: Text(
-                            employeeData['jabatan'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => NonAsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.2,
+                              child: const Text('Jabatan')),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: constraints.maxWidth * 0.5,
+                              child: const Text('Bobot')),
+                            numeric: true,
+                            onSort: (columnIndex, ascending) {
+                              setState(() {
+                                sortColumnIndex = columnIndex;
+                                sortAscending = ascending;
+                              });
+                            },
+                          ),
+                        ],
+                        rows: paginatedEmployees.asMap().entries.map((entry) {
+                          final index = startIndex + entry.key + 1;
+                          final employee = entry.value;
+                          final employeeData = employee['data'] as Map<String, dynamic>;
+                      
+                          return DataRow(
+                            cells: [
+                              DataCell(Text('$index')),
+                              DataCell(
+                                SizedBox(
+                                  child: Text(
+                                    employeeData['nama'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                        collectionName: collectionName,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: constraints.maxWidth * 0.5,
-                          child: Text('${employeeData['bobot'] ?? 0}')),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => NonAsnDetailPage(
-                                documentId: employee['id'],
-                                collectionName: collectionName,
+                              DataCell(
+                                Container(
+                                  width: constraints.maxWidth * 0.2,
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: Text(
+                                    employeeData['jabatan'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                        collectionName: collectionName,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
+                              DataCell(
+                                SizedBox(
+                                  width: constraints.maxWidth * 0.5,
+                                  child: Text('${employeeData['bobot'] ?? '0'}')),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NonAsnDetailPage(
+                                        documentId: employee['id'],
+                                        collectionName: collectionName,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           );
-                        },
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Pagination controls
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios),
+                      onPressed: page > 1 
+                          ? () => currentPage.value-- 
+                          : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Halaman $page dari $totalPages',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
-          ),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios),
+                      onPressed: page < totalPages 
+                          ? () => currentPage.value++ 
+                          : null,
+                    ),
+                  ],
+                ),
+                // Show total items
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Total: $totalItems data',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -309,8 +418,8 @@ class _NonAsnAssessmentHistoryPageState extends State<NonAsnAssessmentHistoryPag
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Hanya tampilkan tombol hapus jika bukan collection aktif
-                      //if (index != 0) // Assuming newest collection is at index 0
+                      // Hanya tampilkan tombol hapus jika user adalah admin
+                      if (_currentUserRole == "admin")
                         IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
                           onPressed: () => _deleteCollection(collection),
